@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow"><!-- chặn máy tìm kiếm lập chỉ mục trang -->
+<title>Mỗi ngày một câu tiếng Anh - Cục Chính trị QK5</title>
+<!-- Phiên bản 3.0 - Tuần linh hoạt theo tình huống (thuần phần B ngân hàng Bảo tàng): mỗi tuần 4-7 câu theo mốc cột "Chu de tuan", ngày cuối tuần ôn tập + thực hành tình huống -->
+<style>
+:root{--green:#2e5339;--green2:#3d6b4a;--gold:#c9a227;--bg:#f4f6f3;--card:#ffffff;--text:#22301f;--muted:#6b7a66;}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,Arial,sans-serif;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+html,body{max-width:100%;overflow-x:hidden;}
+body{background:var(--bg);color:var(--text);padding-bottom:70px;padding-bottom:calc(70px + env(safe-area-inset-bottom,0px));}
+header{background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;text-align:center;padding:16px 14px 12px;padding:calc(16px + env(safe-area-inset-top,0px)) calc(14px + env(safe-area-inset-right,0px)) 12px calc(14px + env(safe-area-inset-left,0px));}
+header h1{font-size:clamp(12px,3.7vw,17px);letter-spacing:.3px;white-space:nowrap;} /* tiêu đề luôn nằm gọn 1 dòng */
+header .sub{font-size:clamp(9px,2.8vw,12px);opacity:.85;margin-top:3px;white-space:nowrap;}
+header .slogan{font-size:11px;color:#ffe9a8;margin-top:5px;font-style:italic;}
+.tabs{display:flex;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #dde3d8;z-index:50;padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);}
+.tabs button{flex:1;padding:9px 2px 8px;border:none;background:none;font-size:11px;color:var(--muted);cursor:pointer;}
+.tabs button .ico{display:block;font-size:19px;margin-bottom:2px;}
+.tabs button.active{color:var(--green);font-weight:700;}
+.page{display:none;max-width:640px;margin:0 auto;padding:14px;padding:14px calc(14px + env(safe-area-inset-right,0px)) 14px calc(14px + env(safe-area-inset-left,0px));}
+.page.show{display:block;}
+.card{background:var(--card);border-radius:14px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:12px;}
+.daytag{display:inline-block;background:var(--gold);color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:8px;}
+.wktag{display:inline-block;background:#e8efe6;color:var(--green);font-size:12px;padding:3px 10px;border-radius:20px;margin-bottom:8px;margin-left:4px;}
+.en{font-size:24px;font-weight:800;color:var(--green);line-height:1.3;}
+.ipa{font-size:15px;color:#8a6d1f;margin-top:4px;font-style:italic;}
+.vi{font-size:17px;margin-top:8px;}
+.use{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.45;}
+.ex{font-size:13px;background:#f2f6ef;border-left:3px solid var(--gold);padding:8px 10px;border-radius:0 8px 8px 0;margin-top:10px;line-height:1.5;white-space:pre-line;}
+.btnrow{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+.btnrow1{display:flex;gap:6px;margin-top:12px;flex-wrap:nowrap;max-width:100%;}
+.btnrow1 .btn{flex:1;min-width:0;padding:7px 2px;font-size:12px;font-weight:600;white-space:nowrap;text-align:center;overflow:hidden;text-overflow:ellipsis;border-radius:8px;}
+.tabs button{min-width:0;overflow:hidden;}
+.btn{border:none;border-radius:10px;padding:10px 14px;font-size:14px;cursor:pointer;font-weight:600;}
+.btn-g{background:var(--green);color:#fff;}
+.btn-o{background:#eef2ec;color:var(--green);}
+.btn-gold{background:var(--gold);color:#fff;}
+.btn.learned{background:#1d7a3e;color:#fff;}
+h2{font-size:15px;color:var(--green);margin:6px 0 10px;}
+.srow{display:flex;align-items:flex-start;gap:8px;padding:10px 4px;border-bottom:1px solid #eef1ec;}
+.srow:last-child{border-bottom:none;}
+.srow .num{font-size:11px;color:#fff;background:var(--green2);border-radius:50%;min-width:22px;height:22px;display:flex;align-items:center;justify-content:center;margin-top:2px;}
+.srow .txt{flex:1;}
+.srow .txt .e{font-weight:700;font-size:14px;}
+.srow .txt .m{font-size:12px;color:var(--muted);}
+.srow .acts{display:flex;gap:6px;}
+.mini{border:none;background:#eef2ec;border-radius:8px;width:32px;height:32px;font-size:15px;cursor:pointer;}
+.mini.on{background:#1d7a3e;color:#fff;}
+.wkhead{background:var(--green);color:#fff;padding:10px 12px;border-radius:10px;margin:10px 0 4px;font-size:14px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;}
+.wkbody{display:none;}
+.wkbody.open{display:block;}
+.lock{opacity:.45;}
+input[type=text],input[type=search]{width:100%;padding:10px 12px;border:1px solid #d5ddd0;border-radius:10px;font-size:16px;margin-bottom:8px;} /* ≥16px để iPhone không tự zoom khi chạm vào ô nhập */
+.flash{min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;user-select:none;}
+.flash .side{font-size:22px;font-weight:800;color:var(--green);}
+.flash .hint{font-size:12px;color:var(--muted);margin-top:10px;}
+.qopt{display:block;width:100%;text-align:left;margin-top:8px;padding:11px 12px;border:1.5px solid #d5ddd0;border-radius:10px;background:#fff;font-size:14px;cursor:pointer;}
+.qopt.ok{border-color:#1d7a3e;background:#e4f3e9;}
+.qopt.bad{border-color:#c0392b;background:#fdecea;}
+.bar{height:10px;background:#e4e9e0;border-radius:6px;overflow:hidden;margin-top:6px;}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--gold));}
+.stat{display:flex;justify-content:space-between;font-size:14px;padding:7px 0;border-bottom:1px dashed #e2e7de;}
+.stat b{color:var(--green);}
+textarea{width:100%;min-height:170px;border:1px solid #d5ddd0;border-radius:10px;padding:10px;font-size:16px;margin-top:8px;font-family:Consolas,monospace;}
+.note{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;}
+.countdown{background:#fff8e6;border:1px solid #f0dfa8;border-radius:10px;padding:10px 12px;font-size:13px;color:#7a6217;margin-bottom:10px;}
+#reg{position:fixed;inset:0;background:rgba(23,34,20,.97);z-index:100;display:none;align-items:center;justify-content:center;padding:18px;overflow-y:auto;}
+.adm{width:100%;border-collapse:collapse;font-size:12.5px;}
+.adm th{background:var(--green);color:#fff;padding:7px 6px;text-align:left;font-weight:600;white-space:nowrap;}
+.adm td{padding:7px 6px;border-bottom:1px solid #eef1ec;}
+</style>
+</head>
+<body>
+<header>
+<h1>MỖI NGÀY HỌC MỘT CÂU GIAO TIẾP TIẾNG ANH</h1>
+<div class="sub">Phòng Cán bộ - Cục Chính trị Quân khu 5 · Kế hoạch 277/KH-CT</div>
+<div class="slogan">"Mỗi ngày một câu tiếng Anh - Mỗi ngày một bước tiến"</div>
+</header>
+
+<div class="page show" id="pg0"></div>
+<div class="page" id="pg1"></div>
+<div class="page" id="pg2"></div>
+<div class="page" id="pg3"></div>
+<div class="page" id="pg4"></div>
+
+<div id="reg">
+<div class="card" style="max-width:440px;width:100%;margin:auto;padding:0;overflow:hidden">
+<div style="background:linear-gradient(150deg,var(--green) 0%,var(--green2) 70%);color:#fff;text-align:center;padding:24px 18px 18px">
+<div style="font-size:18px;font-weight:800;letter-spacing:.6px;line-height:1.35">PHẦN MỀM TỰ HỌC TIẾNG ANH</div>
+<div style="font-size:13.5px;color:#ffe9a8;font-weight:700;margin-top:5px;letter-spacing:.3px">PHÒNG CÁN BỘ</div>
+<div style="font-size:12px;opacity:.9;margin-top:2px">Cục Chính trị Quân khu 5</div>
+<div style="font-size:11.5px;opacity:.8;margin-top:8px;font-style:italic;border-top:1px solid rgba(255,255,255,.25);padding-top:8px">Phong trào "Mỗi ngày học một câu giao tiếp tiếng Anh"<br>Kế hoạch số 277/KH-CT ngày 09/7/2026</div>
+</div>
+<div style="padding:16px 16px 14px">
+<div style="font-size:14px;font-weight:700;color:var(--green);margin-bottom:6px">Đăng nhập để bắt đầu học</div>
+<div class="note" style="margin-bottom:10px">Nhập <b>đúng họ và tên</b> theo danh sách cơ quan đã lập. Kết quả học tập được cơ quan theo dõi theo từng cá nhân — tự giác học thật, không khai hộ.</div>
+<input type="text" id="rname" placeholder="Họ và tên (VD: Nguyễn Văn An)">
+<div style="margin:4px 0 6px;font-size:14px" id="regroles">
+<label style="display:block;padding:5px 0"><input type="radio" name="rrole" value="troly" checked> Trợ lý, nhân viên</label>
+<label style="display:block;padding:5px 0"><input type="radio" name="rrole" value="chihuy"> Cán bộ chỉ huy</label>
+</div>
+<input type="text" id="rcode" placeholder="Mã quản trị (chỉ nhập nếu là cán bộ chỉ huy)">
+<button class="btn btn-g" style="width:100%" id="regbtn" onclick="doRegister()">✅ Đăng ký và bắt đầu học</button>
+<div class="note" id="rmsg" style="min-height:18px"></div>
+<div class="note" style="text-align:center;margin-top:2px"><a href="javascript:toggleLogin()" id="loginlink" style="color:var(--green);font-weight:600">Đã đăng ký trước đó? Đăng nhập lại</a></div>
+<div style="text-align:center;font-size:11px;color:var(--muted);margin-top:4px;font-style:italic">"Mỗi ngày một câu tiếng Anh - Mỗi ngày một bước tiến"</div>
+</div>
+</div>
+</div>
+
+<div class="tabs">
+<button class="active" onclick="go(0)"><span class="ico">📅</span>Hôm nay</button>
+<button onclick="go(1)"><span class="ico">📚</span>Ngân hàng</button>
+<button onclick="go(2)"><span class="ico">🎯</span>Luyện tập</button>
+<button onclick="go(3)"><span class="ico">📊</span>Tiến độ</button>
+<button id="tabadmin" style="display:none" onclick="go(4)"><span class="ico">👥</span>Quản lý</button>
+</div>
+
+<script>
+"use strict";
+// ================= DỮ LIỆU: 13 tuần x 7 câu = 91 câu =================
+let WEEKS=[
+"Tuần 1: Chào hỏi cơ bản","Tuần 2: Giới thiệu bản thân, đơn vị","Tuần 3: Giao tiếp trong công việc",
+"Tuần 4: Công việc - hội họp, điện thoại","Tuần 5: Sinh hoạt hằng ngày","Tuần 6: Cảm ơn, xin lỗi, chúc mừng",
+"Tuần 7: Hỏi đường","Tuần 8: Mua sắm","Tuần 9: Du lịch","Tuần 10: Ăn uống, nhà hàng",
+"Tuần 11: Đón tiếp khách quốc tế","Tuần 12: Làm việc với khách quốc tế","Tuần 13: Câu động viên, tổng hợp"];
+let S=[
+// Tuần 1
+{e:"Hello!",p:"/həˈloʊ/",v:"Xin chào!",u:"Lời chào thông dụng nhất, dùng mọi lúc, với mọi người.",x:"A: Hello!\nB: Hello! Nice to see you."},
+{e:"Good morning!",p:"/ɡʊd ˈmɔːrnɪŋ/",v:"Chào buổi sáng!",u:"Dùng trước 12 giờ trưa. Buổi chiều dùng Good afternoon, buổi tối dùng Good evening.",x:"A: Good morning, sir!\nB: Good morning! How are you?"},
+{e:"How are you today?",p:"/haʊ ɑːr juː təˈdeɪ/",v:"Hôm nay bạn thế nào?",u:"Câu hỏi thăm sức khỏe, thường dùng sau lời chào.",x:"A: How are you today?\nB: I'm fine, thank you."},
+{e:"I'm fine, thank you.",p:"/aɪm faɪn, θæŋk juː/",v:"Tôi khỏe, cảm ơn bạn.",u:"Câu trả lời lịch sự cho 'How are you?'. Có thể thêm 'And you?' để hỏi lại.",x:"A: How are you?\nB: I'm fine, thank you. And you?"},
+{e:"Nice to meet you.",p:"/naɪs tə miːt juː/",v:"Rất vui được gặp bạn.",u:"Dùng khi gặp ai đó lần đầu tiên. Đáp lại: 'Nice to meet you, too.'",x:"A: I'm John. Nice to meet you.\nB: Nice to meet you, too."},
+{e:"What's your name?",p:"/wʌts jɔːr neɪm/",v:"Bạn tên là gì?",u:"Hỏi tên người mới gặp. Trả lời: 'My name is...' hoặc 'I'm...'",x:"A: What's your name?\nB: My name is Hung."},
+{e:"See you later!",p:"/siː juː ˈleɪtər/",v:"Hẹn gặp lại!",u:"Lời chào tạm biệt thân mật. Tương tự: See you soon / Goodbye.",x:"A: I have to go now. See you later!\nB: See you!"},
+// Tuần 2
+{e:"My name is Nam.",p:"/maɪ neɪm ɪz nɑːm/",v:"Tôi tên là Nam.",u:"Giới thiệu tên mình. Thay 'Nam' bằng tên của bạn.",x:"Hello everyone. My name is Nam."},
+{e:"I'm from Da Nang.",p:"/aɪm frʌm dɑː næŋ/",v:"Tôi đến từ Đà Nẵng.",u:"Giới thiệu quê quán, nơi công tác. I'm from + tên địa phương.",x:"A: Where are you from?\nB: I'm from Da Nang."},
+{e:"I'm an army officer.",p:"/aɪm ən ˈɑːrmi ˈɔːfɪsər/",v:"Tôi là sĩ quan quân đội.",u:"Giới thiệu nghề nghiệp. 'Soldier' là chiến sĩ, 'officer' là sĩ quan.",x:"A: What do you do?\nB: I'm an army officer."},
+{e:"I work at the Political Department.",p:"/aɪ wɜːrk æt ðə pəˈlɪtɪkəl dɪˈpɑːrtmənt/",v:"Tôi công tác tại Cục Chính trị.",u:"Giới thiệu nơi làm việc: I work at + tên cơ quan.",x:"I work at the Political Department of Military Region 5."},
+{e:"This is my colleague.",p:"/ðɪs ɪz maɪ ˈkɑːliːɡ/",v:"Đây là đồng nghiệp của tôi.",u:"Giới thiệu người đi cùng. Thay colleague bằng friend (bạn), commander (chỉ huy).",x:"This is my colleague, Mr. Binh."},
+{e:"How old are you?",p:"/haʊ oʊld ɑːr juː/",v:"Bạn bao nhiêu tuổi?",u:"Hỏi tuổi (dùng với người thân quen). Trả lời: I'm 30 years old.",x:"A: How old are you?\nB: I'm twenty-five years old."},
+{e:"Where are you from?",p:"/wer ɑːr juː frʌm/",v:"Bạn đến từ đâu?",u:"Hỏi quê quán, quốc tịch của người mới gặp.",x:"A: Where are you from?\nB: I'm from Australia."},
+// Tuần 3
+{e:"I have a meeting at 8 a.m.",p:"/aɪ hæv ə ˈmiːtɪŋ æt eɪt eɪ em/",v:"Tôi có cuộc họp lúc 8 giờ sáng.",u:"Thông báo lịch làm việc. a.m. = sáng, p.m. = chiều/tối.",x:"Sorry, I can't. I have a meeting at 8 a.m."},
+{e:"Can you help me, please?",p:"/kæn juː help miː, pliːz/",v:"Bạn có thể giúp tôi được không?",u:"Nhờ giúp đỡ một cách lịch sự. Thêm 'please' để lịch sự hơn.",x:"A: Can you help me, please?\nB: Sure. What do you need?"},
+{e:"What time is it now?",p:"/wʌt taɪm ɪz ɪt naʊ/",v:"Bây giờ là mấy giờ?",u:"Hỏi giờ. Trả lời: It's 9 o'clock. / It's half past ten.",x:"A: What time is it now?\nB: It's seven thirty."},
+{e:"I'm busy at the moment.",p:"/aɪm ˈbɪzi æt ðə ˈmoʊmənt/",v:"Hiện tại tôi đang bận.",u:"Từ chối khéo khi đang bận việc. Có thể thêm: Can we talk later?",x:"Sorry, I'm busy at the moment. Can we talk later?"},
+{e:"Please wait a moment.",p:"/pliːz weɪt ə ˈmoʊmənt/",v:"Vui lòng đợi một lát.",u:"Đề nghị người khác chờ. Tương tự: Just a moment, please.",x:"Please wait a moment. I'll check for you."},
+{e:"I will finish the report today.",p:"/aɪ wɪl ˈfɪnɪʃ ðə rɪˈpɔːrt təˈdeɪ/",v:"Tôi sẽ hoàn thành báo cáo hôm nay.",u:"Cam kết thời hạn công việc. will + động từ = sẽ làm.",x:"Don't worry. I will finish the report today."},
+{e:"Let's get to work!",p:"/lets ɡet tə wɜːrk/",v:"Bắt tay vào việc thôi!",u:"Kêu gọi mọi người bắt đầu công việc. Let's + động từ = chúng ta hãy...",x:"It's 7 o'clock. Let's get to work!"},
+// Tuần 4
+{e:"May I come in?",p:"/meɪ aɪ kʌm ɪn/",v:"Tôi có thể vào được không ạ?",u:"Xin phép vào phòng làm việc, phòng họp. Rất lịch sự.",x:"A: May I come in?\nB: Yes, please come in."},
+{e:"Could you say that again, please?",p:"/kʊd juː seɪ ðæt əˈɡen, pliːz/",v:"Bạn có thể nhắc lại được không?",u:"Dùng khi chưa nghe rõ. Lịch sự hơn 'What?'",x:"Sorry, could you say that again, please?"},
+{e:"I don't understand.",p:"/aɪ doʊnt ˌʌndərˈstænd/",v:"Tôi không hiểu.",u:"Nói thật khi chưa hiểu để người khác giải thích lại.",x:"I don't understand. Can you explain it?"},
+{e:"Please speak slowly.",p:"/pliːz spiːk ˈsloʊli/",v:"Vui lòng nói chậm lại.",u:"Đề nghị người nước ngoài nói chậm để dễ nghe.",x:"My English is not good. Please speak slowly."},
+{e:"I'll call you back later.",p:"/aɪl kɔːl juː bæk ˈleɪtər/",v:"Tôi sẽ gọi lại cho bạn sau.",u:"Dùng khi đang bận, hẹn gọi lại điện thoại.",x:"I'm in a meeting. I'll call you back later."},
+{e:"The meeting is postponed.",p:"/ðə ˈmiːtɪŋ ɪz poʊstˈpoʊnd/",v:"Cuộc họp bị hoãn lại.",u:"Thông báo thay đổi lịch. postpone = hoãn, cancel = hủy.",x:"The meeting is postponed until Monday."},
+{e:"Good job! Keep it up!",p:"/ɡʊd dʒɑːb kiːp ɪt ʌp/",v:"Làm tốt lắm! Hãy phát huy!",u:"Khen ngợi, động viên đồng đội khi hoàn thành tốt nhiệm vụ.",x:"You finished early. Good job! Keep it up!"},
+// Tuần 5
+{e:"What's for lunch today?",p:"/wʌts fɔːr lʌntʃ təˈdeɪ/",v:"Hôm nay ăn trưa món gì?",u:"Hỏi về bữa ăn. breakfast = bữa sáng, dinner = bữa tối.",x:"A: What's for lunch today?\nB: Rice and fish."},
+{e:"I get up at five o'clock.",p:"/aɪ ɡet ʌp æt faɪv əˈklɑːk/",v:"Tôi thức dậy lúc 5 giờ.",u:"Nói về thói quen hằng ngày. get up = thức dậy.",x:"In the army, I get up at five o'clock."},
+{e:"The weather is nice today.",p:"/ðə ˈweðər ɪz naɪs təˈdeɪ/",v:"Hôm nay thời tiết đẹp.",u:"Câu bắt chuyện thông dụng. hot = nóng, cold = lạnh, rainy = mưa.",x:"The weather is nice today. Let's go outside."},
+{e:"I'm going to the gym.",p:"/aɪm ˈɡoʊɪŋ tə ðə dʒɪm/",v:"Tôi đi tập thể dục đây.",u:"be going to + nơi chốn = đang đi đến đâu.",x:"After work, I'm going to the gym."},
+{e:"Did you sleep well?",p:"/dɪd juː sliːp wel/",v:"Bạn ngủ ngon không?",u:"Hỏi thăm buổi sáng. Trả lời: Yes, very well, thanks.",x:"A: Did you sleep well?\nB: Yes, very well. Thank you."},
+{e:"It's time for a break.",p:"/ɪts taɪm fɔːr ə breɪk/",v:"Đến giờ giải lao rồi.",u:"It's time for + danh từ = đến giờ làm gì.",x:"We've worked for two hours. It's time for a break."},
+{e:"Have a good weekend!",p:"/hæv ə ɡʊd ˈwiːkend/",v:"Chúc cuối tuần vui vẻ!",u:"Lời chúc chiều thứ Sáu. Đáp: You too! (Bạn cũng vậy nhé!)",x:"A: Have a good weekend!\nB: Thanks, you too!"},
+// Tuần 6
+{e:"Thank you very much.",p:"/θæŋk juː ˈveri mʌtʃ/",v:"Cảm ơn bạn rất nhiều.",u:"Lời cảm ơn trang trọng. Ngắn gọn hơn: Thanks!",x:"Thank you very much for your help."},
+{e:"You're welcome.",p:"/jʊr ˈwelkəm/",v:"Không có gì.",u:"Đáp lại lời cảm ơn. Tương tự: No problem / My pleasure.",x:"A: Thank you!\nB: You're welcome."},
+{e:"I'm sorry, I'm late.",p:"/aɪm ˈsɑːri, aɪm leɪt/",v:"Xin lỗi, tôi đến muộn.",u:"Xin lỗi khi đến trễ. Nên thêm lý do ngắn gọn.",x:"I'm sorry, I'm late. The traffic was bad."},
+{e:"Excuse me!",p:"/ɪkˈskjuːz miː/",v:"Xin lỗi! (gây chú ý)",u:"Dùng để bắt đầu hỏi người lạ, xin nhường đường.",x:"Excuse me! Can I ask you a question?"},
+{e:"No problem.",p:"/noʊ ˈprɑːbləm/",v:"Không vấn đề gì.",u:"Đáp lại lời cảm ơn hoặc xin lỗi một cách thoải mái.",x:"A: Sorry I'm late.\nB: No problem."},
+{e:"Congratulations!",p:"/kənˌɡrætʃəˈleɪʃənz/",v:"Chúc mừng!",u:"Chúc mừng thành tích, thăng quân hàm, khen thưởng...",x:"Congratulations on your promotion!"},
+{e:"Happy birthday to you!",p:"/ˈhæpi ˈbɜːrθdeɪ tə juː/",v:"Chúc mừng sinh nhật!",u:"Lời chúc sinh nhật đồng chí, đồng đội.",x:"Happy birthday to you! I wish you all the best."},
+// Tuần 7
+{e:"Where is the bus station?",p:"/wer ɪz ðə bʌs ˈsteɪʃən/",v:"Bến xe buýt ở đâu?",u:"Where is + địa điểm = hỏi đường. airport = sân bay, hospital = bệnh viện.",x:"Excuse me, where is the bus station?"},
+{e:"How far is it from here?",p:"/haʊ fɑːr ɪz ɪt frʌm hɪr/",v:"Từ đây đến đó bao xa?",u:"Hỏi khoảng cách. Trả lời: About 2 kilometers.",x:"A: How far is it from here?\nB: About one kilometer."},
+{e:"Turn left at the corner.",p:"/tɜːrn left æt ðə ˈkɔːrnər/",v:"Rẽ trái ở góc đường.",u:"Chỉ đường. turn left = rẽ trái, turn right = rẽ phải.",x:"Go ahead and turn left at the corner."},
+{e:"Go straight ahead.",p:"/ɡoʊ streɪt əˈhed/",v:"Đi thẳng phía trước.",u:"Chỉ đường đi thẳng. Thường kết hợp: Go straight and turn right.",x:"Go straight ahead for 500 meters."},
+{e:"It's next to the post office.",p:"/ɪts nekst tə ðə poʊst ˈɔːfɪs/",v:"Nó ở cạnh bưu điện.",u:"next to = bên cạnh, opposite = đối diện, behind = phía sau.",x:"The bank is next to the post office."},
+{e:"Can you show me on the map?",p:"/kæn juː ʃoʊ miː ɑːn ðə mæp/",v:"Bạn chỉ giúp tôi trên bản đồ được không?",u:"Nhờ chỉ vị trí trên bản đồ khi khó diễn đạt bằng lời.",x:"I don't know this area. Can you show me on the map?"},
+{e:"I'm looking for this address.",p:"/aɪm ˈlʊkɪŋ fɔːr ðɪs əˈdres/",v:"Tôi đang tìm địa chỉ này.",u:"look for = tìm kiếm. Đưa địa chỉ viết sẵn cho người được hỏi xem.",x:"Excuse me, I'm looking for this address."},
+// Tuần 8
+{e:"How much is this?",p:"/haʊ mʌtʃ ɪz ðɪs/",v:"Cái này giá bao nhiêu?",u:"Hỏi giá khi mua sắm. How much = bao nhiêu tiền.",x:"A: How much is this?\nB: It's 100,000 dong."},
+{e:"It's too expensive.",p:"/ɪts tuː ɪkˈspensɪv/",v:"Đắt quá.",u:"Chê đắt để mặc cả. cheap = rẻ, expensive = đắt.",x:"It's too expensive. Can you reduce the price?"},
+{e:"Can you give me a discount?",p:"/kæn juː ɡɪv miː ə ˈdɪskaʊnt/",v:"Bạn giảm giá cho tôi được không?",u:"Mặc cả khi mua hàng. discount = giảm giá.",x:"I'll buy two. Can you give me a discount?"},
+{e:"I'd like to buy this one.",p:"/aɪd laɪk tə baɪ ðɪs wʌn/",v:"Tôi muốn mua cái này.",u:"I'd like to = tôi muốn (lịch sự hơn I want).",x:"I'd like to buy this one. Please wrap it up."},
+{e:"Do you have a bigger size?",p:"/duː juː hæv ə ˈbɪɡər saɪz/",v:"Bạn có cỡ lớn hơn không?",u:"Hỏi khi mua quần áo, giày dép. smaller = nhỏ hơn.",x:"This shirt is small. Do you have a bigger size?"},
+{e:"Can I pay by card?",p:"/kæn aɪ peɪ baɪ kɑːrd/",v:"Tôi thanh toán bằng thẻ được không?",u:"pay by card = trả bằng thẻ, pay in cash = trả tiền mặt.",x:"A: Can I pay by card?\nB: Yes, of course."},
+{e:"Here is your change.",p:"/hɪr ɪz jɔːr tʃeɪndʒ/",v:"Đây là tiền thừa của bạn.",u:"change = tiền thối lại. Người bán thường nói câu này.",x:"That's 80,000. Here is your change."},
+// Tuần 9
+{e:"I'd like to book a room.",p:"/aɪd laɪk tə bʊk ə ruːm/",v:"Tôi muốn đặt một phòng.",u:"book = đặt trước (phòng, vé). single room = phòng đơn.",x:"Hello, I'd like to book a room for two nights."},
+{e:"Where can I buy a ticket?",p:"/wer kæn aɪ baɪ ə ˈtɪkɪt/",v:"Tôi có thể mua vé ở đâu?",u:"ticket = vé (xe, tàu, máy bay, tham quan).",x:"Excuse me, where can I buy a ticket?"},
+{e:"What time does the bus leave?",p:"/wʌt taɪm dʌz ðə bʌs liːv/",v:"Mấy giờ xe buýt khởi hành?",u:"leave = rời đi, khởi hành; arrive = đến nơi.",x:"A: What time does the bus leave?\nB: At 9 a.m."},
+{e:"Is there a hotel near here?",p:"/ɪz ðer ə hoʊˈtel nɪr hɪr/",v:"Gần đây có khách sạn không?",u:"Is there...? = có... không? near here = gần đây.",x:"Is there a hotel near here? I need a place to stay."},
+{e:"Can you take a photo for me?",p:"/kæn juː teɪk ə ˈfoʊtoʊ fɔːr miː/",v:"Bạn chụp ảnh giúp tôi được không?",u:"Nhờ người khác chụp ảnh khi đi tham quan.",x:"Excuse me, can you take a photo for me?"},
+{e:"This place is beautiful!",p:"/ðɪs pleɪs ɪz ˈbjuːtɪfəl/",v:"Nơi này thật đẹp!",u:"Khen cảnh đẹp. Tương tự: What a beautiful view!",x:"Wow, this place is beautiful!"},
+{e:"Have a nice trip!",p:"/hæv ə naɪs trɪp/",v:"Chúc chuyến đi vui vẻ!",u:"Lời chúc người sắp đi công tác, du lịch. Tương tự: Safe travels!",x:"Goodbye! Have a nice trip!"},
+// Tuần 10
+{e:"I'm hungry.",p:"/aɪm ˈhʌŋɡri/",v:"Tôi đói rồi.",u:"hungry = đói, thirsty = khát, full = no.",x:"I'm hungry. Let's have lunch."},
+{e:"What would you like to drink?",p:"/wʌt wʊd juː laɪk tə drɪŋk/",v:"Bạn muốn uống gì?",u:"Mời khách đồ uống một cách lịch sự.",x:"A: What would you like to drink?\nB: Tea, please."},
+{e:"The menu, please.",p:"/ðə ˈmenjuː, pliːz/",v:"Cho tôi xem thực đơn.",u:"Câu ngắn gọn khi vào nhà hàng. menu = thực đơn.",x:"Good evening. The menu, please."},
+{e:"This food is delicious.",p:"/ðɪs fuːd ɪz dɪˈlɪʃəs/",v:"Món ăn này rất ngon.",u:"Khen món ăn. delicious = rất ngon.",x:"This food is delicious. I love it!"},
+{e:"Can I have the bill, please?",p:"/kæn aɪ hæv ðə bɪl, pliːz/",v:"Cho tôi xin hóa đơn.",u:"Gọi thanh toán ở nhà hàng. bill = hóa đơn.",x:"Excuse me, can I have the bill, please?"},
+{e:"I'd like a cup of coffee.",p:"/aɪd laɪk ə kʌp əv ˈkɔːfi/",v:"Cho tôi một tách cà phê.",u:"Gọi đồ uống: a cup of tea/coffee, a glass of water.",x:"A: What would you like?\nB: I'd like a cup of coffee."},
+{e:"Enjoy your meal!",p:"/ɪnˈdʒɔɪ jɔːr miːl/",v:"Chúc ngon miệng!",u:"Nói trước khi ăn, mời khách dùng bữa.",x:"Here is your food. Enjoy your meal!"},
+// Tuần 11
+{e:"Welcome to Vietnam!",p:"/ˈwelkəm tə ˌvjetˈnɑːm/",v:"Chào mừng đến Việt Nam!",u:"Chào đón khách quốc tế đến Việt Nam.",x:"Welcome to Vietnam! We are happy to see you."},
+{e:"Welcome to our unit.",p:"/ˈwelkəm tə ˈaʊər ˈjuːnɪt/",v:"Chào mừng đến đơn vị chúng tôi.",u:"Đón đoàn khách đến thăm, làm việc tại đơn vị. unit = đơn vị.",x:"Welcome to our unit. Please come in."},
+{e:"It's an honor to meet you.",p:"/ɪts ən ˈɑːnər tə miːt juː/",v:"Thật vinh dự được gặp ngài.",u:"Trang trọng, dùng khi tiếp đón khách cấp cao.",x:"It's an honor to meet you, General."},
+{e:"Please have a seat.",p:"/pliːz hæv ə siːt/",v:"Mời ngài/bạn ngồi.",u:"Mời khách ngồi một cách lịch sự. seat = chỗ ngồi.",x:"Please have a seat. The commander will come soon."},
+{e:"Would you like some tea?",p:"/wʊd juː laɪk sʌm tiː/",v:"Ngài dùng trà nhé?",u:"Mời khách đồ uống. Would you like...? = Ngài có muốn...?",x:"A: Would you like some tea?\nB: Yes, please. Thank you."},
+{e:"How was your flight?",p:"/haʊ wʌz jɔːr flaɪt/",v:"Chuyến bay của ngài thế nào?",u:"Câu hỏi thăm xã giao khi đón khách từ xa đến. flight = chuyến bay.",x:"A: How was your flight?\nB: It was good, thank you."},
+{e:"I hope you enjoy your stay.",p:"/aɪ hoʊp juː ɪnˈdʒɔɪ jɔːr steɪ/",v:"Mong ngài có kỳ lưu trú vui vẻ.",u:"Lời chúc khách có thời gian lưu lại tốt đẹp.",x:"Welcome to Da Nang. I hope you enjoy your stay."},
+// Tuần 12
+{e:"Let me introduce our commander.",p:"/let miː ˌɪntrəˈduːs ˈaʊər kəˈmændər/",v:"Cho phép tôi giới thiệu chỉ huy của chúng tôi.",u:"Giới thiệu thủ trưởng với khách. Let me = cho phép tôi.",x:"Let me introduce our commander, Colonel Minh."},
+{e:"Do you need an interpreter?",p:"/duː juː niːd ən ɪnˈtɜːrprətər/",v:"Ngài có cần phiên dịch không?",u:"interpreter = phiên dịch viên (nói), translator = biên dịch (viết).",x:"A: Do you need an interpreter?\nB: No, thank you. I understand."},
+{e:"Please follow me.",p:"/pliːz ˈfɑːloʊ miː/",v:"Xin mời đi theo tôi.",u:"Dẫn khách đến phòng họp, phòng khách. follow = đi theo.",x:"The meeting room is this way. Please follow me."},
+{e:"We are glad to cooperate with you.",p:"/wiː ɑːr ɡlæd tə koʊˈɑːpəreɪt wɪð juː/",v:"Chúng tôi rất vui được hợp tác với các bạn.",u:"cooperate = hợp tác. Dùng trong hội đàm, làm việc song phương.",x:"We are glad to cooperate with you in this program."},
+{e:"Thank you for your visit.",p:"/θæŋk juː fɔːr jɔːr ˈvɪzɪt/",v:"Cảm ơn ngài đã đến thăm.",u:"Lời cảm ơn khi tiễn khách. visit = chuyến thăm.",x:"Thank you for your visit. We hope to see you again."},
+{e:"We wish you good health and success.",p:"/wiː wɪʃ juː ɡʊd helθ ænd səkˈses/",v:"Chúc ngài sức khỏe và thành công.",u:"Lời chúc trang trọng cuối buổi tiếp. wish = chúc.",x:"Goodbye! We wish you good health and success."},
+{e:"Goodbye and see you again!",p:"/ˌɡʊdˈbaɪ ænd siː juː əˈɡen/",v:"Tạm biệt và hẹn gặp lại!",u:"Lời chào tiễn khách, kết thúc buổi làm việc.",x:"Goodbye and see you again! Have a safe trip."},
+// Tuần 13
+{e:"Practice makes perfect.",p:"/ˈpræktɪs meɪks ˈpɜːrfɪkt/",v:"Có công mài sắt, có ngày nên kim.",u:"Thành ngữ động viên: luyện tập nhiều sẽ giỏi.",x:"Don't give up! Practice makes perfect."},
+{e:"Learning English opens many doors.",p:"/ˈlɜːrnɪŋ ˈɪŋɡlɪʃ ˈoʊpənz ˈmeni dɔːrz/",v:"Học tiếng Anh mở ra nhiều cơ hội.",u:"Câu động viên tinh thần học ngoại ngữ, hội nhập.",x:"Keep studying! Learning English opens many doors."},
+{e:"Never give up!",p:"/ˈnevər ɡɪv ʌp/",v:"Đừng bao giờ bỏ cuộc!",u:"give up = bỏ cuộc. Câu cổ vũ tinh thần quyết tâm.",x:"It's difficult, but never give up!"},
+{e:"Every day is a chance to learn.",p:"/ˈevri deɪ ɪz ə tʃæns tə lɜːrn/",v:"Mỗi ngày là một cơ hội để học hỏi.",u:"chance = cơ hội. Nhắc nhở tinh thần học tập suốt đời.",x:"Remember: every day is a chance to learn."},
+{e:"We learn together, we grow together.",p:"/wiː lɜːrn təˈɡeðər, wiː ɡroʊ təˈɡeðər/",v:"Cùng học tập, cùng tiến bộ.",u:"Khẩu hiệu đoàn kết trong học tập của tập thể.",x:"Our motto: we learn together, we grow together."},
+{e:"Little by little, one goes far.",p:"/ˈlɪtl baɪ ˈlɪtl, wʌn ɡoʊz fɑːr/",v:"Tích tiểu thành đại.",u:"Kiên trì mỗi ngày một ít sẽ đi được xa.",x:"One sentence a day - little by little, one goes far."},
+{e:"Believe in yourself!",p:"/bɪˈliːv ɪn jərˈself/",v:"Hãy tin vào chính mình!",u:"believe in = tin tưởng vào. Câu động viên sự tự tin.",x:"You can do it. Believe in yourself!"}
+];
+// ================= LÕI ỨNG DỤNG =================
+const DEFAULT_S=S;              // giữ bản gốc bộ 91 câu mặc định
+const DEFAULT_WEEKS=WEEKS.slice();
+const START=new Date(2026,6,20); // 20/7/2026
+const DAY=86400000;
+function todayIdx(){const n=new Date();const t=new Date(n.getFullYear(),n.getMonth(),n.getDate());return Math.floor((t-START)/DAY);}
+// ===== Tuần linh hoạt: mỗi tuần = 1 tình huống (4-7 câu), mốc tuần lấy từ cột "Chu de tuan" =====
+let WKSTART=[]; // chỉ số câu đầu của từng tuần
+function rebuildWeeksDefault(){WKSTART=[];for(let i=0;i<S.length;i+=7)WKSTART.push(i);}
+function wkCount(){return WKSTART.length;}
+function wkSize(w){return (w+1<WKSTART.length?WKSTART[w+1]:S.length)-WKSTART[w];}
+function calWeek(){const i=todayIdx();return i<0?0:Math.floor(i/7);} // tuần lịch từ 20/7/2026
+function unlockedCount(){
+const i=todayIdx();
+if(!WKSTART.length)rebuildWeeksDefault();
+if(i<0)return Math.min(S.length,wkSize(0)); // trước 20/7: xem trước tuần 1
+const w=Math.floor(i/7);
+if(w>=wkCount())return S.length;
+return Math.min(S.length,WKSTART[w]+Math.min(i%7+1,wkSize(w)));
+}
+function targetNow(){ // chỉ tiêu: thuộc hết số câu mở đến hết tuần hiện tại
+if(todayIdx()<0)return 0;
+const w=Math.min(calWeek(),wkCount()-1);
+return w+1<wkCount()?WKSTART[w+1]:S.length;
+}
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+let learned=new Set(LS.get("ta_learned",[]));
+function saveLearned(){LS.set("ta_learned",[...learned]);}
+// ============ CẤU HÌNH ĐỒNG BỘ (PA3 - Google Sheets) ============
+const API_URL="https://script.google.com/macros/s/AKfycbwKOGe3nHg6j34B65Q8i9zSzhO1Ub9_rNhaq7qtZtFP0mFeeZWoIThD0xP2a1S8wiz7nA/exec"; // <-- Bước cuối cùng: dán link Web App (Apps Script) vào đây
+const UNIT_CODE="cb.cct";  // Mã đơn vị: PHẢI TRÙNG với SECRET trong Apps Script. Nên đổi trước khi phát hành.
+const ADMIN_CODE="8686";      // Mã quản trị: đăng ký vai trò chỉ huy / cài lại máy. Nên đổi trước khi phát hành.
+const ROLES={chihuy:"Cán bộ chỉ huy",troly:"Trợ lý, nhân viên"};
+function apiReady(){return API_URL.indexOf("https://")===0;}
+function profile(){return LS.get("ta_profile",null);}
+function devId(){ // mã máy ổn định: tính từ đặc điểm thiết bị, cùng máy luôn ra cùng mã (kể cả khi Safari xóa bộ nhớ)
+let d=LS.get("ta_dev","");
+if(d)return d;
+const s=[navigator.userAgent,screen.width,screen.height,screen.colorDepth,window.devicePixelRatio,navigator.language,navigator.platform||"",navigator.hardwareConcurrency||"",navigator.maxTouchPoints||""].join("|");
+let h=5381;for(let i=0;i<s.length;i++){h=((h<<5)+h+s.charCodeAt(i))>>>0;}
+d="M"+h.toString(36).toUpperCase();
+LS.set("ta_dev",d);return d;
+}
+async function api(body){const r=await fetch(API_URL,{method:"POST",body:JSON.stringify(Object.assign({u:UNIT_CODE},body))});return await r.json();}
+function initProfile(){
+const p=profile();
+if(!p){document.getElementById("reg").style.display="flex";if(regMode==="reg")toggleLogin();return;} // mặc định: Đăng nhập (tài khoản do cơ quan cấp)
+if(p.role==="chihuy")document.getElementById("tabadmin").style.display="block";
+trySync();
+}
+let regMode="reg";
+function toggleLogin(){
+regMode=regMode==="reg"?"login":"reg";
+document.getElementById("regroles").style.display=regMode==="reg"?"block":"none";
+document.getElementById("rcode").style.display=regMode==="reg"?"block":"none";
+document.getElementById("regbtn").innerHTML=regMode==="reg"?"✅ Đăng ký và bắt đầu học":"🔑 Đăng nhập";
+document.getElementById("loginlink").textContent=regMode==="reg"?"Đã có tài khoản? Đăng nhập":"Chưa có tài khoản? Đăng ký mới";
+document.getElementById("rmsg").textContent="";
+}
+async function doRegister(){
+const n=document.getElementById("rname").value.trim();
+const st=document.getElementById("rmsg");
+if(n.length<5||n.split(/\s+/).length<2){st.textContent="⚠ Nhập đầy đủ họ và tên (VD: Nguyễn Văn An)";return;}
+if(regMode==="login"){
+if(!apiReady()){st.textContent="⚠ Đăng nhập cần kết nối máy chủ";return;}
+st.textContent="Đang đăng nhập...";
+try{
+const res=await api({action:"login",name:n,dev:devId()});
+if(!res.ok){st.textContent="⚠ "+(res.msg||"Đăng nhập thất bại");return;}
+LS.set("ta_profile",{name:n,role:res.role==="chihuy"?"chihuy":"troly"});
+if(res.learned!==undefined&&res.learned!==""){learned=new Set(String(res.learned).split(",").filter(function(x){return x!=="";}).map(Number));saveLearned();}
+}catch(e){st.textContent="⚠ Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.";return;}
+document.getElementById("reg").style.display="none";
+initProfile();renderToday();return;
+}
+const role=document.querySelector("input[name=rrole]:checked").value;
+if(role==="chihuy"&&document.getElementById("rcode").value.trim()!==ADMIN_CODE){st.textContent="⚠ Vai trò chỉ huy cần mã quản trị đúng (liên hệ đồng chí phụ trách phong trào)";return;}
+st.textContent="Đang đăng ký...";
+if(apiReady()){
+try{const res=await api({action:"register",name:n,role:role,dev:devId()});
+if(!res.ok){st.textContent="⚠ "+(res.msg||"Đăng ký bị từ chối");return;}}
+catch(e){st.textContent="⚠ Không kết nối được máy chủ. Kiểm tra mạng Internet rồi thử lại.";return;}
+}
+LS.set("ta_profile",{name:n,role:role});
+document.getElementById("reg").style.display="none";
+initProfile();renderToday();
+}
+let syncTimer=null;
+function scheduleSync(){LS.set("ta_dirty",1);clearTimeout(syncTimer);syncTimer=setTimeout(trySync,1500);}
+async function trySync(){
+const p=profile();
+if(!p||!apiReady()||!LS.get("ta_dirty",0))return;
+const hist=LS.get("ta_quiz",[]);const lq=hist.length?hist[hist.length-1]:null;
+try{const res=await api({action:"submit",name:p.name,role:p.role,dev:devId(),learned:learned.size,quiz:lq?(lq.s+"/"+lq.t):"",day:todayIdx()+1,list:[...learned].sort(function(a,b){return a-b;}).join(",")});
+if(res.ok)LS.set("ta_dirty",0);}catch(e){/* mất mạng: giữ lại, tự gửi bù lần sau */}
+}
+// ---- Ngân hàng câu dùng chung (do Bảo tàng QK xây dựng, dán vào trang NganHang trên Sheet) ----
+let WEEKDLG=[]; // tình huống thực hành theo tuần lịch (cột G trang NganHang) - độc lập với số câu
+function applyBank(){
+const b=LS.get("ta_bank",null);
+if(b&&b.length>=7){
+S=b.map(function(r){return{e:r.e,p:r.p,v:r.v,u:r.u,x:r.x};});
+WEEKS=[];WKSTART=[];
+b.forEach(function(r,i){
+if(i===0||String(r.w||"").trim()){WKSTART.push(i);WEEKS.push((r.w&&String(r.w).trim())||("Tuần "+WKSTART.length));}
+});
+if(WKSTART.length<=1){WEEKS=[];WKSTART=[];for(let i=0;i<S.length;i+=7){WKSTART.push(i);WEEKS.push("Tuần "+(i/7+1));}}
+}else{rebuildWeeksDefault();}
+WEEKDLG=LS.get("ta_dlg",[])||[];
+}
+function speakDlg(w){
+const t=(WEEKDLG[w]||"").split("\n").map(function(l){return l.trim();}).filter(function(l){return /^[ABC]:/.test(l);}).map(function(l){return l.replace(/^[ABC]:\s*/,"");}).join(" ... ");
+if(t)speak(t);
+}
+async function fetchBank(force){
+if(!apiReady())return;
+if(!force&&Date.now()-LS.get("ta_bank_t",0)<6*3600*1000)return; // chỉ kiểm tra 6 giờ/lần
+try{
+const r=await fetch(API_URL+"?u="+encodeURIComponent(UNIT_CODE)+"&action=bank");
+const j=await r.json();
+if(j.ok&&j.bank&&j.bank.length>=7){LS.set("ta_bank",j.bank);if(j.dlg)LS.set("ta_dlg",j.dlg);LS.set("ta_bank_t",Date.now());applyBank();renderToday();}
+else if(j.ok){LS.set("ta_bank_t",Date.now());seedDefaultBank();} // trang NganHang còn trống: dùng bộ câu mặc định
+}catch(e){}
+}
+// Gửi bộ 91 câu mặc định lên Sheet -> máy chủ tạo trang "NganHangMacDinh" (chỉ 1 lần)
+async function seedDefaultBank(){
+if(LS.get("ta_seeded",0))return;
+try{
+const rows=DEFAULT_S.map(function(s,i){return{e:s.e,p:s.p,v:s.v,u:s.u,x:s.x,w:(i%7===0?DEFAULT_WEEKS[i/7]||"":"")};});
+const res=await api({action:"seedbank",rows:rows});
+if(res.ok)LS.set("ta_seeded",1);
+}catch(e){}
+}
+function resetProfile(){
+const c=prompt("Nhập mã quản trị (do đồng chí phụ trách phong trào giữ):");
+if(c!==ADMIN_CODE){alert("Sai mã quản trị.");return;}
+localStorage.removeItem("ta_profile");
+alert("Đã xóa đăng ký trên máy này.\nLưu ý: phải xóa dòng đăng ký cũ trong trang DangKy của Google Sheet thì mới đăng ký lại được.");
+location.reload();
+}
+async function renderAdmin(){
+fetchBank(true); // kiểm tra ngân hàng câu ngay (tạo NganHangMacDinh nếu chưa có)
+const b=document.getElementById("pg4");
+if(!apiReady()){b.innerHTML='<div class="card"><h2>👥 Quản lý</h2><div class="note">Chưa cấu hình link máy chủ (API_URL trong file). Xem file "Huong dan thiet lap".</div></div>';return;}
+b.innerHTML='<div class="card"><h2>👥 Theo dõi toàn cơ quan</h2><div class="note">⏳ Đang tải dữ liệu...</div></div>';
+let rows=[];
+try{const r=await fetch(API_URL+"?u="+encodeURIComponent(UNIT_CODE)+"&action=fetch");const j=await r.json();if(!j.ok)throw 0;rows=j.rows||[];}
+catch(e){b.innerHTML='<div class="card"><h2>👥 Theo dõi toàn cơ quan</h2><div class="note">⚠ Không tải được dữ liệu. Kiểm tra mạng hoặc link máy chủ.</div><div class="btnrow"><button class="btn btn-g" onclick="renderAdmin()">🔄 Thử lại</button></div></div>';return;}
+const idx=todayIdx();const target=targetNow();
+rows.sort((a,b2)=>(b2.l||0)-(a.l||0));
+const dat=rows.filter(r=>(r.l||0)>=target).length;
+let h='<div class="card"><h2>👥 Theo dõi toàn cơ quan</h2>'
++'<div class="stat"><span>Quân số đã đăng ký</span><b>'+rows.length+'</b></div>'
++'<div class="stat"><span>Chỉ tiêu đến tuần này</span><b>'+target+' câu</b></div>'
++'<div class="stat"><span>Đạt chỉ tiêu</span><b>'+dat+'/'+rows.length+'</b></div>'
++'<div class="btnrow"><button class="btn btn-o" onclick="renderAdmin()">🔄 Cập nhật</button><button class="btn btn-g" onclick="copySummary()">📋 Sao chép báo cáo tổng hợp</button></div></div>';
+h+='<div class="card" style="overflow-x:auto"><table class="adm"><tr><th>#</th><th>Họ tên</th><th>Vai trò</th><th>Câu thuộc</th><th>Chỉ tiêu</th><th>KT gần nhất</th><th>Cập nhật</th></tr>';
+rows.forEach(function(r,i){h+='<tr><td>'+(i+1)+'</td><td>'+esc(String(r.n||""))+'</td><td>'+esc(ROLES[r.r]||String(r.r||""))+'</td><td><b>'+(r.l||0)+'/'+S.length+'</b></td><td>'+((r.l||0)>=target?"✅":"⚠")+'</td><td>'+esc(String(r.q||"—"))+'</td><td>'+esc(String(r.t||"—"))+'</td></tr>';});
+h+='</table></div>';
+window._admRows=rows;window._admTarget=target;
+b.innerHTML=h;
+}
+function copySummary(){
+const rows=window._admRows||[];const target=window._admTarget||0;
+let t="BÁO CÁO TỔNG HỢP PHONG TRÀO HỌC TIẾNG ANH\n(KH 277/KH-CT - Phòng Cán bộ)\nNgày: "+new Date().toLocaleDateString("vi-VN")+"\nQuân số tham gia: "+rows.length+"\nChỉ tiêu đến tuần này: "+target+" câu\nĐạt chỉ tiêu: "+rows.filter(r=>(r.l||0)>=target).length+"/"+rows.length+"\n-----------------------------------\n";
+rows.forEach(function(r,i){t+=(i+1)+". "+r.n+" ("+(ROLES[r.r]||r.r)+"): "+(r.l||0)+"/"+S.length+" câu"+((r.l||0)>=target?" - ĐẠT":" - CHƯA ĐẠT")+(r.q?(", KT: "+r.q):"")+"\n";});
+if(navigator.clipboard){navigator.clipboard.writeText(t).then(function(){alert("Đã sao chép báo cáo tổng hợp. Dán vào Zalo để gửi.");});}else{prompt("Sao chép nội dung:",t);}
+}
+function speak(t,slow){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="en-US";u.rate=slow?0.6:0.85;const vs=speechSynthesis.getVoices().filter(v=>v.lang.startsWith("en"));if(vs.length)u.voice=vs[0];speechSynthesis.speak(u);}catch(e){alert("Thiết bị không hỗ trợ đọc phát âm.");}}
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");}
+// ===== Luyện nói - máy chấm bằng nhận dạng giọng nói =====
+function canRecog(){return !!(window.SpeechRecognition||window.webkitSpeechRecognition);}
+function normTxt(t){return String(t).toLowerCase().replace(/[^a-z0-9' ]/g," ").replace(/\s+/g," ").trim();}
+function simScore(target,heard){
+const A=normTxt(target).split(" ").filter(Boolean),B=new Set(normTxt(heard).split(" "));
+if(!A.length)return 0;let hit=0;A.forEach(function(w){if(B.has(w))hit++;});
+return hit/A.length;
+}
+function speakTest(i){
+const box=document.getElementById("saybox");
+if(!box)return;
+if(!canRecog()){box.innerHTML='<span style="color:#c0392b">⚠ Trình duyệt này không hỗ trợ nhận dạng giọng nói. Hãy mở bằng Chrome (Android) hoặc Safari (iPhone) bản mới để luyện nói — chỉ có nói đạt mới được tính thuộc.</span>';return;}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+try{
+const r=new SR();r.lang="en-US";r.interimResults=false;r.maxAlternatives=3;
+box.innerHTML='🎙 Đang nghe... hãy đọc to, rõ câu tiếng Anh';
+r.onresult=function(ev){
+let best=0,heard="";
+for(let k=0;k<ev.results[0].length;k++){
+const t=ev.results[0][k].transcript;const s=simScore(S[i].e,t);
+if(s>=best){best=s;heard=t;}
+}
+const pct=Math.round(best*100);
+if(best>=0.8){
+if(!learned.has(i)){learned.add(i);saveLearned();scheduleSync();}
+renderToday();
+const b2=document.getElementById("saybox");
+if(b2)b2.innerHTML='<b style="color:#1d7a3e">✅ ĐẠT ('+pct+'%)</b> — máy nghe: "'+esc(heard)+'". Đã tự đánh dấu thuộc!';
+}else{
+box.innerHTML='<b style="color:#c0392b">❌ Chưa đạt ('+pct+'%)</b> — máy nghe: "'+esc(heard||"(không rõ)")+'". Bấm 🔊 nghe mẫu rồi thử lại.';
+}
+};
+r.onerror=function(e){
+if(e.error==="not-allowed"||e.error==="service-not-allowed"){
+box.innerHTML='⚠ <b>Micro chưa được cấp quyền.</b> Cách mở: khi trình duyệt hỏi thì bấm Cho phép; nếu lỡ chặn — Android: biểu tượng 🔒 cạnh địa chỉ → Quyền → Micrô → Cho phép; iPhone: Cài đặt → Safari (hoặc Cài đặt → Ứng dụng → Safari) → Micrô → Cho phép, rồi tải lại trang. Chỉ có nói đạt mới được tính thuộc.';
+}else{
+box.innerHTML='⚠ Không nghe được ('+e.error+') — thử lại ở nơi yên tĩnh, nói to rõ hơn.';
+}
+};
+r.start();
+}catch(e){box.innerHTML='⚠ Không khởi động được micro trên thiết bị này.';}
+}
+// Thông báo nổi (dùng cho luyện nói ở Ngân hàng / Flashcard)
+function toast(msg){
+let t=document.getElementById("toastbox");
+if(!t){t=document.createElement("div");t.id="toastbox";t.style.cssText="position:fixed;left:12px;right:12px;bottom:84px;background:#22301f;color:#fff;padding:10px 14px;border-radius:10px;font-size:13px;z-index:99;box-shadow:0 4px 14px rgba(0,0,0,.3)";document.body.appendChild(t);}
+t.innerHTML=msg;clearTimeout(t._h);t._h=setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},4500);
+}
+// Luyện nói 1 câu bất kỳ (Ngân hàng, Flashcard) - nói đạt là tính thuộc
+function speakRow(i){
+if(!canRecog()){toast("⚠ Trình duyệt không hỗ trợ nhận dạng giọng nói.");return;}
+try{speechSynthesis.cancel();}catch(e){}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+try{
+const r=new SR();r.lang="en-US";r.interimResults=false;r.maxAlternatives=3;
+toast('🎙 Đang nghe... hãy đọc to: "'+esc(S[i].e)+'"');
+r.onresult=function(ev){
+let best=0,heard="";
+for(let k=0;k<ev.results[0].length;k++){const t=ev.results[0][k].transcript;const s=simScore(S[i].e,t);if(s>=best){best=s;heard=t;}}
+const pct=Math.round(best*100);
+if(best>=0.8){
+if(!learned.has(i)){learned.add(i);saveLearned();scheduleSync();}
+toast('<b style="color:#7be495">✅ ĐẠT ('+pct+'%)</b> — máy nghe: "'+esc(heard)+'"');
+const pid=(document.querySelector(".page.show")||{}).id;
+if(pid==="pg0")renderToday();else if(pid==="pg1")renderBank();
+}else{
+toast('<b style="color:#ffb3a7">❌ Chưa đạt ('+pct+'%)</b> — máy nghe: "'+esc(heard||"(không rõ)")+'"');
+speak("Could you say that again, please?");
+}
+};
+r.onerror=function(e){toast("⚠ "+(e.error==="not-allowed"?"Micro chưa được cấp quyền — bấm Cho phép khi trình duyệt hỏi.":"Không nghe được ("+e.error+"), thử lại."));};
+r.start();
+}catch(e){toast("⚠ Không khởi động được micro.");}
+}
+// ===== Hội thoại trực tiếp với máy (tình huống tuần) =====
+let DLG=null;
+function parseDlg(w){
+const t=WEEKDLG[w]||"";const out=[];
+t.split("\n").forEach(function(l){const m=l.trim().match(/^([ABC]):\s*(.+)$/);if(m)out.push({r:m[1],e:m[2].trim()});});
+return out;
+}
+function curDlgWeek(){const idx=todayIdx();return Math.min(Math.max(0,Math.floor((idx<0?0:idx)/7)),Math.max(0,WEEKDLG.length-1));}
+function startDlg(role){
+const lines=parseDlg(curDlgWeek());
+if(lines.length<2)return;
+DLG={lines:lines,role:role,pos:0,log:[]};
+dlgStep();
+}
+function dlgStep(){ // máy nói các lượt của máy, dừng ở lượt của người
+if(!DLG)return;
+const buf=[];
+while(DLG.pos<DLG.lines.length&&DLG.lines[DLG.pos].r!==DLG.role){
+const l=DLG.lines[DLG.pos];DLG.log.push({r:l.r,t:l.e,me:false});buf.push(l.e);DLG.pos++;
+}
+if(buf.length)speak(buf.join(" ... "));
+renderDlg();
+}
+function renderDlg(){
+const b=document.getElementById("dlgbox");if(!b||!DLG)return;
+let h='<div class="note">Bạn là vai <b>'+DLG.role+'</b> — máy đóng vai còn lại.</div>';
+DLG.log.forEach(function(m){
+h+='<div style="margin:6px 0;padding:8px 10px;border-radius:10px;max-width:88%;font-size:14px;'+(m.me?'background:#fff3d6;margin-left:auto;text-align:right':'background:#e8efe6')+'"><b>'+m.r+':</b> '+esc(m.t)+(m.note?'<div style="font-size:11px;color:var(--muted)">'+esc(m.note)+'</div>':'')+'</div>';
+});
+h+='<div id="dlgctl" style="margin-top:8px"></div>';
+b.innerHTML=h;
+const c=document.getElementById("dlgctl");
+if(DLG.pos>=DLG.lines.length){
+c.innerHTML='<div style="color:#1d7a3e;font-weight:700">🎉 Hoàn thành tình huống! Đổi vai để luyện tiếp.</div><div class="btnrow1"><button class="btn btn-o" onclick="startDlg(\'A\')">Luyện lại - vai A</button><button class="btn btn-o" onclick="startDlg(\'B\')">Luyện lại - vai B</button></div>';
+speak("Well done!");return;
+}
+const line=DLG.lines[DLG.pos];
+c.innerHTML='<div class="ex" style="margin-top:0">👉 Đến lượt bạn ('+line.r+'): <b>'+esc(line.e)+'</b></div>'
++'<div class="btnrow1"><button class="btn btn-gold" onclick="dlgListen()">🎤 Nói câu của bạn</button><button class="btn btn-o" onclick="speak(DLG.lines[DLG.pos].e,true)">🐢 Nghe mẫu</button></div>'
++'<div class="note" id="dlgmsg" style="min-height:15px"></div>';
+}
+function dlgListen(){
+const msg=document.getElementById("dlgmsg");
+if(!DLG)return;
+if(!canRecog()){if(msg)msg.innerHTML="⚠ Máy này không hỗ trợ nhận dạng giọng nói — bấm 🐢 nghe mẫu và luyện đọc theo.";return;}
+try{speechSynthesis.cancel();}catch(e){}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const line=DLG.lines[DLG.pos];
+try{
+const r=new SR();r.lang="en-US";r.interimResults=false;r.maxAlternatives=3;
+if(msg)msg.textContent="🎙 Đang nghe... hãy nói câu của bạn";
+r.onresult=function(ev){
+let best=0,heard="";
+for(let k=0;k<ev.results[0].length;k++){const t=ev.results[0][k].transcript;const s=simScore(line.e,t);if(s>=best){best=s;heard=t;}}
+if(best>=0.7){
+DLG.log.push({r:line.r,t:line.e,me:true,note:"bạn nói: "+heard+" ("+Math.round(best*100)+"%)"});
+DLG.pos++;dlgStep();
+}else{
+if(msg)msg.innerHTML='❌ Máy nghe: "'+esc(heard||"(không rõ)")+'" — chưa khớp, máy sẽ đề nghị bạn nói lại.';
+speak("Sorry, I did not catch that. Could you say that again, please?");
+}
+};
+r.onerror=function(e){
+if(e.error==="not-allowed"||e.error==="service-not-allowed"){if(msg)msg.innerHTML="⚠ Micro bị chặn trên máy này — không luyện hội thoại trực tiếp được.";}
+else{if(msg)msg.innerHTML="⚠ Không nghe rõ — máy đề nghị bạn nói lại.";speak("Could you say that again, please?");}
+};
+r.start();
+}catch(e){if(msg)msg.textContent="⚠ Không khởi động được micro.";}
+}
+function go(i){document.querySelectorAll(".page").forEach((p,j)=>p.classList.toggle("show",i===j));document.querySelectorAll(".tabs button").forEach((b,j)=>b.classList.toggle("active",i===j));window.scrollTo(0,0);if(i===0)renderToday();if(i===1)renderBank();if(i===2)renderPractice();if(i===3)renderProgress();if(i===4)renderAdmin();}
+function toggleLearned(i){if(learned.has(i))learned.delete(i);else learned.add(i);saveLearned();scheduleSync();const p=document.querySelector(".page.show").id;if(p==="pg0")renderToday();if(p==="pg1")renderBank();if(p==="pg3")renderProgress();}
+// ---------- Tab Hôm nay ----------
+function renderToday(){
+const idx=todayIdx();
+if(!WKSTART.length)rebuildWeeksDefault();
+const wk=Math.min(Math.max(0,Math.floor((idx<0?0:idx)/7)),wkCount()-1);
+const size=wkSize(wk),dw=idx<0?0:idx%7;
+const done=idx>=0&&Math.floor(idx/7)>=wkCount();
+const inRev=!done&&idx>=0&&dw>=size;
+const cur=done?S.length-1:WKSTART[wk]+Math.min(dw,size-1);
+const s=S[cur];
+let h="";
+if(idx<0){const d=Math.ceil((START-new Date())/DAY);h+='<div class="countdown">⏳ Phong trào bắt đầu ngày <b>20/7/2026</b> (còn '+d+' ngày). Dưới đây là câu số 1 để làm quen trước.</div>';}
+else if(done){h+='<div class="countdown">🎉 Đã hoàn thành toàn bộ '+S.length+' câu của '+wkCount()+' tuần! Hãy ôn tập ở mục Luyện tập.</div>';}
+else if(inRev){h+='<div class="countdown">📖 Hôm nay là ngày ôn tập: đã học đủ '+size+' câu của tuần — ôn lại các câu và thực hành tình huống bên dưới.</div>';}
+h+='<div class="card"><span class="daytag">CÂU '+(cur+1)+'/'+S.length+'</span><span class="wktag">'+(WEEKS[wk]||"Tuần "+(wk+1))+'</span>'
++'<div class="en">'+esc(s.e)+'</div><div class="ipa">'+esc(s.p)+'</div><div class="vi">📖 '+esc(s.v)+'</div>'
++(s.u?'<div class="use">💡 <b>Cách dùng:</b> '+esc(s.u)+'</div>':'')
++(s.x?'<div class="ex">🗣 '+esc(s.x)+'</div>':'')
++(learned.has(cur)?'<div class="note" style="color:#1d7a3e;font-weight:700;margin-top:8px">✓ Câu này đã được máy xác nhận thuộc</div>':'')
++'<div class="btnrow1"><button class="btn btn-g" onclick="speak(S['+cur+'].e)">🔊 Nghe</button>'
++'<button class="btn btn-o" onclick="speak(S['+cur+'].e,true)">🐢 Nghe chậm</button>'
++'<button class="btn btn-gold" onclick="speakTest('+cur+')">🎤 Nói thử — máy chấm</button></div>'
++'<div class="note" id="saybox" style="min-height:16px;margin-top:6px"></div></div>';
+// tình huống thực hành theo tuần lịch (chạy đủ 52 tuần, không phụ thuộc số câu)
+const wkCal=Math.min(Math.max(0,Math.floor((idx<0?0:idx)/7)),WEEKDLG.length-1);
+if(WEEKDLG.length&&WEEKDLG[wkCal]){
+h+='<div class="card"><h2>🎭 Tình huống thực hành tuần này</h2><div class="ex" style="margin-top:6px">'+esc(WEEKDLG[wkCal])+'</div>'
++'<div class="btnrow"><button class="btn btn-o" onclick="speakDlg('+wkCal+')">🔊 Nghe hội thoại</button></div>'
++'<div class="note">Luyện theo cặp: đọc chậm từng câu, đổi vai A/B, thực hành không nhìn tài liệu.</div></div>';
+}
+// các câu trong tuần hiện tại
+h+='<div class="card"><h2>📌 Các câu trong tuần (ôn lại "10 phút tiếng Anh")</h2>';
+const st=WKSTART[wk],en=Math.min(st+size,unlockedCount());
+for(let i=st;i<en;i++){h+=rowHTML(i);}
+h+='</div>';
+document.getElementById("pg0").innerHTML=h;
+}
+function rowHTML(i){const s=S[i];return '<div class="srow"><span class="num">'+(i+1)+'</span><div class="txt"><div class="e">'+esc(s.e)+'</div><div class="m">'+esc(s.p)+' — '+esc(s.v)+'</div></div><div class="acts"><button class="mini" onclick="speak(S['+i+'].e)">🔊</button><button class="mini" onclick="speakRow('+i+')">🎤</button><span class="mini '+(learned.has(i)?"on":"")+'" style="cursor:default;display:flex;align-items:center;justify-content:center">'+(learned.has(i)?"✓":"")+'</span></div></div>';}
+// ---------- Tab Ngân hàng ----------
+let openWk=new Set([0]);
+function renderBank(){
+const q=(document.getElementById("bankq")||{}).value||"";
+let h='<input type="search" id="bankq" placeholder="🔍 Tìm câu tiếng Anh hoặc nghĩa tiếng Việt..." value="'+esc(q)+'" oninput="renderBank();this.focus();this.setSelectionRange(this.value.length,this.value.length)">';
+const un=unlockedCount();
+if(q.trim()){
+h+='<div class="card">';let found=0;
+S.forEach((s,i)=>{if(i<un&&(s.e.toLowerCase().includes(q.toLowerCase())||s.v.toLowerCase().includes(q.toLowerCase()))){h+=rowHTML(i);found++;}});
+if(!found)h+='<div class="note">Không tìm thấy câu phù hợp (chỉ tìm trong các câu đã mở).</div>';
+h+='</div>';
+}else{
+if(!WKSTART.length)rebuildWeeksDefault();
+for(let w=0;w<wkCount();w++){
+const st=WKSTART[w],sz=wkSize(w),locked=st>=un;
+h+='<div class="wkhead'+(locked?" lock":"")+'" onclick="tw('+w+')"><span>'+WEEKS[w]+(locked?" 🔒":"")+'</span><span>'+(openWk.has(w)?"▲":"▼")+'</span></div>';
+h+='<div class="wkbody'+(openWk.has(w)?" open":"")+'"><div class="card" style="margin-top:6px">';
+if(locked){h+='<div class="note">Tuần này chưa mở. Mỗi ngày mở 1 câu mới theo kế hoạch (từ 20/7/2026).</div>';}
+else{for(let i=st;i<st+sz;i++){if(i<un)h+=rowHTML(i);else h+='<div class="srow lock"><span class="num">'+(i+1)+'</span><div class="txt"><div class="e">🔒 Câu số '+(i+1)+'</div><div class="m">Sẽ mở vào đúng ngày theo kế hoạch</div></div></div>';}}
+h+='</div></div>';}
+}
+document.getElementById("pg1").innerHTML=h;
+}
+function tw(w){if(openWk.has(w))openWk.delete(w);else openWk.add(w);renderBank();}
+// ---------- Tab Luyện tập ----------
+let fcOrder=[],fcPos=0,fcFront=true,quiz=null;
+function renderPractice(){
+let h="";
+if(parseDlg(curDlgWeek()).length>=2){
+h+='<div class="card"><h2>🗣 Hội thoại với máy — tình huống tuần</h2><div class="note">Chọn vai của bạn, máy đóng vai còn lại và hai bên nói chuyện với nhau. Máy nghe không rõ sẽ đề nghị bạn nhắc lại bằng tiếng Anh.</div>'
++'<div class="btnrow1"><button class="btn btn-g" onclick="startDlg(\'A\')">Tôi đóng vai A</button><button class="btn btn-gold" onclick="startDlg(\'B\')">Tôi đóng vai B</button></div>'
++'<div id="dlgbox" style="margin-top:8px"></div></div>';
+}
+h+='<div class="card"><h2>🃏 Flashcard ôn tập</h2><div class="note">Chạm vào thẻ để lật giữa tiếng Anh và tiếng Việt. Ôn các câu đã mở đến hôm nay.</div>'
++'<div id="fcbox"></div><div class="btnrow1"><button class="btn btn-o" onclick="fcMove(-1)">←</button><button class="btn btn-g" onclick="fcSpeak()">🔊 Nghe</button><button class="btn btn-gold" onclick="speakRow(fcOrder[fcPos])">🎤 Nói</button><button class="btn btn-o" onclick="fcMove(1)">→</button><button class="btn btn-o" onclick="fcShuffle()">🔀</button></div></div>'
++'<div class="card"><h2>📝 Kiểm tra trắc nghiệm (10 câu)</h2><div class="note">Chọn câu tiếng Anh đúng với nghĩa tiếng Việt. Dùng cho kiểm tra nhanh hằng tuần theo Kế hoạch 277.</div><div id="quizbox"><div class="btnrow"><button class="btn btn-g" onclick="startQuiz()">▶ Bắt đầu kiểm tra</button></div></div></div>';
+document.getElementById("pg2").innerHTML=h;
+if(!fcOrder.length)fcShuffle(false);renderFC();
+}
+function pool(){return Math.min(unlockedCount(),S.length);}
+function fcShuffle(rerender=true){fcOrder=[...Array(pool()).keys()];for(let i=fcOrder.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[fcOrder[i],fcOrder[j]]=[fcOrder[j],fcOrder[i]];}fcPos=0;fcFront=true;if(rerender)renderFC();}
+function renderFC(){const i=fcOrder[fcPos];const s=S[i];const b=document.getElementById("fcbox");if(!b)return;
+b.innerHTML='<div class="card flash" style="background:#f7faf5;margin-top:10px" onclick="fcFlip()"><div class="side">'+(fcFront?esc(s.e):"📖 "+esc(s.v))+'</div>'+(fcFront?'<div class="ipa">'+esc(s.p)+'</div>':"")+'<div class="hint">Thẻ '+(fcPos+1)+'/'+fcOrder.length+' · chạm để lật</div></div>';}
+function fcFlip(){fcFront=!fcFront;renderFC();}
+function fcMove(d){fcPos=(fcPos+d+fcOrder.length)%fcOrder.length;fcFront=true;renderFC();}
+function fcSpeak(){speak(S[fcOrder[fcPos]].e);}
+function startQuiz(){
+const n=pool();const idxs=[...Array(n).keys()];for(let i=idxs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[idxs[i],idxs[j]]=[idxs[j],idxs[i]];}
+const qs=idxs.slice(0,Math.min(10,n)).map(qi=>{
+const opts=new Set([qi]);while(opts.size<Math.min(4,n)){opts.add(idxs[Math.floor(Math.random()*n)]);}
+return{a:qi,o:[...opts].sort(()=>Math.random()-.5)};});
+quiz={qs,cur:0,score:0,done:false};renderQuiz();
+}
+function renderQuiz(){
+const b=document.getElementById("quizbox");if(!quiz)return;
+if(quiz.done){
+const hist=LS.get("ta_quiz",[]);
+b.innerHTML='<div style="text-align:center;padding:14px"><div style="font-size:40px">'+(quiz.score>=8?"🏆":quiz.score>=5?"👍":"💪")+'</div><div style="font-size:20px;font-weight:800;color:var(--green)">'+quiz.score+'/'+quiz.qs.length+' câu đúng</div><div class="note">'+(quiz.score>=8?"Xuất sắc! Đề nghị biểu dương.":quiz.score>=5?"Khá tốt, tiếp tục phát huy!":"Cần ôn tập thêm ở mục Flashcard.")+'</div><div class="btnrow" style="justify-content:center"><button class="btn btn-g" onclick="startQuiz()">🔄 Làm lại</button></div></div>';
+return;}
+const q=quiz.qs[quiz.cur];const s=S[q.a];
+let h='<div class="note" style="margin-top:6px">Câu '+(quiz.cur+1)+'/'+quiz.qs.length+' · Điểm: '+quiz.score+'</div><div style="font-size:17px;font-weight:700;margin-top:8px">📖 "'+esc(s.v)+'"</div><div class="note">Câu tiếng Anh nào đúng?</div>';
+q.o.forEach(oi=>{h+='<button class="qopt" onclick="answer('+oi+')">'+esc(S[oi].e)+'</button>';});
+b.innerHTML=h;
+}
+function answer(oi){
+const q=quiz.qs[quiz.cur];const btns=document.querySelectorAll(".qopt");
+btns.forEach(bt=>{bt.disabled=true;if(bt.textContent===S[q.a].e)bt.classList.add("ok");else if(bt.textContent===S[oi].e&&oi!==q.a)bt.classList.add("bad");});
+if(oi===q.a)quiz.score++;speak(S[q.a].e);
+setTimeout(()=>{quiz.cur++;if(quiz.cur>=quiz.qs.length){quiz.done=true;const hist=LS.get("ta_quiz",[]);hist.push({d:new Date().toLocaleDateString("vi-VN"),s:quiz.score,t:quiz.qs.length});LS.set("ta_quiz",hist.slice(-20));scheduleSync();}renderQuiz();},1200);
+}
+// ---------- Tab Tiến độ ----------
+function renderProgress(){
+const prof=profile()||{name:"(chưa đăng ký)",role:"troly"};const un=unlockedCount();const nl=learned.size;const idx=todayIdx();
+const week=idx<0?0:Math.min(wkCount(),Math.floor(idx/7)+1);
+const hist=LS.get("ta_quiz",[]);const last3=hist.slice(-3).reverse();
+const target=targetNow();
+const t13=wkCount()>13?WKSTART[13]:S.length; // số câu theo lộ trình 13 tuần đầu (3 tháng)
+const pct=Math.round(nl/S.length*100);
+let h='<div class="card"><h2>👤 Thông tin cá nhân</h2>'
++'<div class="stat"><span>Họ tên</span><b>'+esc(prof.name)+'</b></div>'
++'<div class="stat"><span>Vai trò</span><b>'+(ROLES[prof.role]||"")+'</b></div>'
++'<div class="stat"><span>Đồng bộ về cơ quan</span><b>'+(apiReady()?(LS.get("ta_dirty",0)?"⏳ Chờ gửi (thiếu mạng)":"✅ Đã gửi"):"Chưa cấu hình máy chủ")+'</b></div>'
++'<div class="note"><a href="javascript:resetProfile()" style="color:var(--muted)">Cài lại thông tin đăng ký (cần mã quản trị)</a></div></div>'
++'<div class="card"><h2>📊 Kết quả học tập</h2>'
++'<div class="stat"><span>Câu đã thuộc</span><b>'+nl+' / '+S.length+' câu ('+pct+'%)</b></div><div class="bar"><i style="width:'+pct+'%"></i></div>'
++'<div class="stat"><span>Tiến độ phong trào</span><b>'+(idx<0?"Chưa bắt đầu (20/7/2026)":Math.floor(idx/7)>=wkCount()?"Đã hoàn thành "+wkCount()+" tuần":"Ngày "+(idx+1)+" · Tuần "+week)+'</b></div>'
++'<div class="stat"><span>Chỉ tiêu đến hết tuần này (theo tình huống)</span><b>'+target+' câu → '+(nl>=target?"✅ Đạt":"⚠ Cần cố gắng")+'</b></div>'
++'<div class="stat"><span>Lộ trình 13 tuần đầu (3 tháng)</span><b>'+t13+' câu → '+(nl>=t13?"✅ Đạt":"đã thuộc "+nl+"/"+t13)+'</b></div>';
+if(last3.length){h+='<div class="stat"><span>Kiểm tra gần nhất</span><b>'+last3.map(r=>r.s+"/"+r.t+" ("+r.d+")").join(" · ")+'</b></div>';}
+h+='</div>'
++'<div class="card"><h2>📄 Báo cáo kết quả (gửi chỉ huy / Phòng KH-TH)</h2><div class="btnrow" style="margin-top:4px"><button class="btn btn-g" onclick="makeReport()">📝 Tạo báo cáo</button><button class="btn btn-o" onclick="copyReport()">📋 Sao chép</button></div><textarea id="rep" placeholder="Bấm \'Tạo báo cáo\' để tự động tổng hợp kết quả, sau đó sao chép gửi qua Zalo."></textarea>'
++'<div class="note">⚠ Lưu ý an toàn thông tin: ứng dụng chạy hoàn toàn trên máy của bạn, không kết nối mạng, không thu thập dữ liệu — phù hợp Bộ quy tắc ứng xử trên môi trường số trong LLVT (QĐ 882). Không nhập thông tin mật vào ứng dụng.</div></div>';
+document.getElementById("pg3").innerHTML=h;
+}
+function makeReport(){
+const prof=profile();const name=prof?(prof.name+" ("+(ROLES[prof.role]||"")+")"):"(chưa đăng ký)";const idx=todayIdx();const nl=learned.size;
+const week=idx<0?0:Math.min(wkCount(),Math.floor(idx/7)+1);
+const hist=LS.get("ta_quiz",[]);const lastQ=hist.length?hist[hist.length-1]:null;
+const target=targetNow();
+const wkList=[];for(let w=0;w<wkCount();w++){const c=[...learned].filter(i=>i>=WKSTART[w]&&i<WKSTART[w]+wkSize(w)).length;if(c>0)wkList.push("Tuần "+(w+1)+": "+c+"/"+wkSize(w)+" câu");}
+const r="BÁO CÁO KẾT QUẢ HỌC TIẾNG ANH\n(Phong trào \"Mỗi ngày học một câu giao tiếp tiếng Anh\" - KH 277/KH-CT)\n"
++"-----------------------------------\n"
++"Họ tên: "+name+"\nNgày báo cáo: "+new Date().toLocaleDateString("vi-VN")+"\n"
++"Tiến độ phong trào: "+(idx<0?"chưa bắt đầu":"tuần "+week+", ngày "+(idx+1))+"\n"
++"Số câu đã thuộc: "+nl+"/"+S.length+" câu\n"
++"Chỉ tiêu đến tuần này: "+target+" câu → "+(nl>=target?"ĐẠT":"CHƯA ĐẠT")+"\n"
++(lastQ?("Kiểm tra trắc nghiệm gần nhất: "+lastQ.s+"/"+lastQ.t+" câu đúng ("+lastQ.d+")\n"):"")
++(wkList.length?("Chi tiết theo tuần: "+wkList.join("; ")+"\n"):"")
++"-----------------------------------\nNgười báo cáo: "+name;
+document.getElementById("rep").value=r;
+}
+function copyReport(){const t=document.getElementById("rep");if(!t.value)makeReport();t.select();try{document.execCommand("copy");alert("Đã sao chép báo cáo. Dán vào Zalo để gửi.");}catch(e){alert("Hãy bôi đen và sao chép thủ công.");}}
+// khởi động
+if(typeof speechSynthesis!=="undefined"){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{};}
+applyBank();   // dùng ngân hàng câu của Cục (nếu đã tải về trước đó)
+renderToday();
+initProfile();
+fetchBank();   // kiểm tra ngân hàng câu mới trên Google Sheet
+setInterval(trySync,60000); // tự gửi bù mỗi phút nếu còn dữ liệu chờ
+// ===== Vá hiển thị trên iPhone =====
+(function(){
+try{
+const ios=/iPhone|iPad|iPod/.test(navigator.userAgent);
+if(!ios)return;
+// 1) Trang hay bị tự trôi xuống khi tải trong khung nhúng của Google -> ép về đầu trang
+const toTop=function(){window.scrollTo(0,0);if(document.scrollingElement)document.scrollingElement.scrollTop=0;};
+toTop();setTimeout(toTop,300);setTimeout(toTop,900);setTimeout(toTop,2000);
+// 2) Banner Google + thanh công cụ Safari che đáy trang -> nâng thanh menu và nới đệm đáy
+document.body.style.paddingBottom="150px";
+const tb=document.querySelector(".tabs");
+tb.style.paddingBottom="6px";
+// nếu chạy toàn màn hình từ icon (hiếm) thì chừa thêm mép trên cho tai thỏ
+if(navigator.standalone===true){
+const hd=document.querySelector("header");
+if(parseFloat(getComputedStyle(hd).paddingTop)<=20){
+const notch=Math.max(screen.height,screen.width)>=812;
+hd.style.paddingTop=(notch?60:26)+"px";
+tb.style.paddingBottom=(notch?24:6)+"px";
+}
+}
+// 3) Bám theo vùng nhìn thấy thực tế: luôn ghim thanh menu ngay trên thanh công cụ Safari
+if(window.visualViewport){
+const fix=function(){
+try{
+const vv=window.visualViewport;
+const hidden=window.innerHeight-vv.height-vv.offsetTop;
+tb.style.bottom=Math.max(0,hidden)+"px";
+}catch(e){}
+};
+window.visualViewport.addEventListener("resize",fix);
+window.visualViewport.addEventListener("scroll",fix);
+fix();
+}
+}catch(e){}
+})();
+</script>
+</body>
+</html>
