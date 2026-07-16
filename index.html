@@ -462,6 +462,7 @@ if(!box)return;
 if(!canRecog()){box.innerHTML='<span style="color:#c0392b">⚠ Trình duyệt này không hỗ trợ nhận dạng giọng nói. Hãy mở bằng Chrome (Android) hoặc Safari (iPhone) bản mới để luyện nói — chỉ có nói đạt mới được tính thuộc.</span>';return;}
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 try{
+primeTTS(); // mở khóa kênh đọc (iPhone)
 const r=new SR();r.lang="en-US";r.interimResults=false;r.maxAlternatives=3;
 box.innerHTML='🎙 Đang nghe... hãy đọc to, rõ câu tiếng Anh';
 r.onresult=function(ev){
@@ -501,6 +502,7 @@ t.innerHTML=msg;clearTimeout(t._h);t._h=setTimeout(function(){if(t.parentNode)t.
 // Luyện nói 1 câu bất kỳ (Ngân hàng, Flashcard) - nói đạt là tính thuộc
 function speakRow(i){
 if(!canRecog()){toast("⚠ Trình duyệt không hỗ trợ nhận dạng giọng nói.");return;}
+primeTTS(); // mở khóa kênh đọc (iPhone)
 try{speechSynthesis.cancel();}catch(e){}
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 try{
@@ -571,6 +573,7 @@ function dlgListen(){
 const msg=document.getElementById("dlgmsg");
 if(!DLG)return;
 if(!canRecog()){if(msg)msg.innerHTML="⚠ Máy này không hỗ trợ nhận dạng giọng nói — bấm 🐢 nghe mẫu và luyện đọc theo.";return;}
+primeTTS(); // mở khóa kênh đọc cho các lượt máy nói sau (bắt buộc trên iPhone)
 try{speechSynthesis.cancel();}catch(e){}
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const line=DLG.lines[DLG.pos];
