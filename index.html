@@ -408,7 +408,7 @@ function speak(t,slow){try{speechSynthesis.cancel();const u=new SpeechSynthesisU
 function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");}
 // ===== Luyện nói - máy chấm bằng nhận dạng giọng nói =====
 function canRecog(){return !!(window.SpeechRecognition||window.webkitSpeechRecognition);}
-function normTxt(t){return String(t).toLowerCase().replace(/[^a-z0-9' ]/g," ").replace(/\s+/g," ").trim();}
+function normTxt(t){return String(t).toLowerCase().replace(/[’‘`´]/g,"'").replace(/'/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();} // quy dấu nháy cong/thẳng về một, bỏ nháy để "I'm"="Im"
 function simScore(target,heard){
 const A=normTxt(target).split(" ").filter(Boolean),B=new Set(normTxt(heard).split(" "));
 if(!A.length)return 0;let hit=0;A.forEach(function(w){if(B.has(w))hit++;});
