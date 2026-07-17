@@ -263,7 +263,8 @@ function saveLearned(){LS.set("ta_learned",[...learned]);}
 const API_URL="https://script.google.com/macros/s/AKfycbwKOGe3nHg6j34B65Q8i9zSzhO1Ub9_rNhaq7qtZtFP0mFeeZWoIThD0xP2a1S8wiz7nA/exec"; // <-- Bước cuối cùng: dán link Web App (Apps Script) vào đây
 const UNIT_CODE="cb.cct";  // Mã đơn vị: PHẢI TRÙNG với SECRET trong Apps Script. Nên đổi trước khi phát hành.
 // (đã bỏ mã quản trị: tài khoản do cơ quan cấp, vai trò lấy từ trang DangKy, đăng xuất không cần mã)
-const ROLES={chihuy:"Cán bộ chỉ huy",troly:"Trợ lý, nhân viên"};
+const ROLES={chihuy:"Chỉ huy",troly:"Trợ lý",nhanvien:"Nhân viên"};
+function normRole(r){return r==="chihuy"?"chihuy":(r==="nhanvien"?"nhanvien":"troly");} // trợ lý & nhân viên quyền như nhau
 function apiReady(){return API_URL.indexOf("https://")===0;}
 function profile(){return LS.get("ta_profile",null);}
 function devId(){ // mã máy ổn định: tính từ đặc điểm thiết bị, cùng máy luôn ra cùng mã (kể cả khi Safari xóa bộ nhớ)
@@ -291,7 +292,7 @@ st.textContent="Đang đăng nhập...";
 try{
 const res=await api({action:"login",name:n,dev:devId()});
 if(!res.ok){st.textContent="⚠ "+(res.msg||"Đăng nhập thất bại");return;}
-LS.set("ta_profile",{name:n,role:res.role==="chihuy"?"chihuy":"troly",hn:String(res.hn||"")});
+LS.set("ta_profile",{name:n,role:normRole(res.role),hn:String(res.hn||"")});
 if(res.learned!==undefined&&res.learned!==""){learned=new Set(String(res.learned).split(/[-,;]/).map(function(x){return Number(x);}).filter(function(n2){return Number.isInteger(n2)&&n2>=0;}));saveLearned();}
 }catch(e){st.textContent="⚠ Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.";return;}
 document.getElementById("reg").style.display="none";
@@ -361,7 +362,7 @@ return;
 }
 if(res&&res.ok){
 p.hn=String(res.hn||p.hn||"");
-p.role=res.role==="chihuy"?"chihuy":"troly";
+p.role=normRole(res.role);
 LS.set("ta_profile",p);
 if(res.learned){String(res.learned).split(/[-,;]/).map(Number).filter(function(n){return Number.isInteger(n)&&n>=0;}).forEach(function(n){learned.add(n);});saveLearned();}
 initProfile();
@@ -395,7 +396,7 @@ let h='<div class="card"><h2>👥 Theo dõi đơn vị thuộc quyền</h2>'
 +'<div class="stat"><span>Quân số trong phạm vi</span><b>'+rows.length+'</b></div>'
 +'<div class="stat"><span>Chỉ tiêu đến tuần này</span><b>'+target+' câu</b></div>'
 +'<div class="stat"><span>Đạt chỉ tiêu</span><b>'+dat+'/'+rows.length+'</b></div>'
-+'<div class="btnrow"><button class="btn btn-o" onclick="renderAdmin()">🔄 Cập nhật</button><button class="btn btn-g" onclick="copySummary()">📋 Sao chép báo cáo tổng hợp</button></div></div>';
++'<div class="btnrow1"><button class="btn btn-o" onclick="renderAdmin()">🔄 Cập nhật</button><button class="btn btn-g" onclick="copySummary()">📋 Sao chép báo cáo</button></div></div>';
 h+='<div class="card" style="overflow-x:auto"><table class="adm"><tr><th>#</th><th>Họ tên / mật danh</th><th>Vai trò</th><th>Câu thuộc</th><th>Chỉ tiêu</th><th>KT gần nhất</th><th>Cập nhật</th></tr>';
 rows.forEach(function(r,i){h+='<tr><td>'+(i+1)+'</td><td><b>'+esc(String(r.hn||r.n||""))+'</b>'+(r.hn?'<div style="font-size:10.5px;color:var(--muted)">'+esc(String(r.n||""))+'</div>':'')+'</td><td>'+esc(ROLES[r.r]||String(r.r||""))+'</td><td><b>'+(r.l||0)+'/'+S.length+'</b></td><td>'+((r.l||0)>=target?"✅":"⚠")+'</td><td>'+esc(String(r.q||"—"))+'</td><td>'+esc(String(r.t||"—"))+'</td></tr>';});
 h+='</table></div>';
@@ -407,13 +408,13 @@ h+='<div class="card"><h2>🛠 Quản trị tài khoản</h2>'
 +'<div class="note" style="margin-bottom:6px"><b>Thêm tài khoản mới</b></div>'
 +'<input type="text" id="au_name" autocapitalize="none" autocorrect="off" placeholder="Mật danh (VD: 01.05.balv)">'
 +'<input type="text" id="au_hn" placeholder="Họ và tên (VD: Lê Văn Ba)">'
-+'<select id="au_role" style="'+selSt+'"><option value="troly">Trợ lý, nhân viên</option><option value="chihuy">Cán bộ chỉ huy</option></select>'
++'<select id="au_role" style="'+selSt+'"><option value="troly">Trợ lý</option><option value="nhanvien">Nhân viên</option><option value="chihuy">Chỉ huy</option></select>'
 +'<div class="btnrow1"><button class="btn btn-g" onclick="adminAddUser()">➕ Thêm tài khoản</button></div>'
 +'<div class="note" style="margin:14px 0 6px;border-top:1px dashed #dde3d8;padding-top:12px"><b>Sửa / xóa tài khoản</b></div>'
 +'<select id="eu_sel" style="'+selSt+'" onchange="adminFillSel()"><option value="">— Chọn tài khoản —</option>'+opts+'</select>'
 +'<input type="text" id="eu_name" autocapitalize="none" autocorrect="off" placeholder="Mật danh (sửa tại đây nếu muốn đổi)">'
 +'<input type="text" id="eu_hn" placeholder="Họ và tên">'
-+'<select id="eu_role" style="'+selSt+'"><option value="troly">Trợ lý, nhân viên</option><option value="chihuy">Cán bộ chỉ huy</option></select>'
++'<select id="eu_role" style="'+selSt+'"><option value="troly">Trợ lý</option><option value="nhanvien">Nhân viên</option><option value="chihuy">Chỉ huy</option></select>'
 +'<div class="btnrow1"><button class="btn btn-g" onclick="adminSaveUser()">💾 Lưu thay đổi</button><button class="btn" style="background:#fdecea;color:#c0392b;border:1px solid #f2c4bd" onclick="adminDelUser()">🗑 Xóa</button></div>'
 +'<div class="note">Đổi mật danh tại đây: tiến độ tự chuyển theo tên mới, người đó chỉ cần đăng xuất - đăng nhập lại. Xóa tài khoản: người đó hết đăng nhập được (nhật ký cũ vẫn giữ).</div></div>';
 }
@@ -436,7 +437,7 @@ const r=rws.filter(function(x){return String(x.n)===t;})[0];
 if(!r)return;
 document.getElementById("eu_name").value=r.n||"";
 document.getElementById("eu_hn").value=r.hn||"";
-document.getElementById("eu_role").value=(r.r==="chihuy"?"chihuy":"troly");
+document.getElementById("eu_role").value=normRole(r.r);
 }
 async function adminSaveUser(){
 const t=_v("eu_sel");
