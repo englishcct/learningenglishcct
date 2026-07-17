@@ -377,8 +377,11 @@ catch(e){b.innerHTML='<div class="card"><h2>👥 Theo dõi toàn cơ quan</h2><d
 const idx=todayIdx();const target=targetNow();
 rows.sort((a,b2)=>(b2.l||0)-(a.l||0));
 const dat=rows.filter(r=>(r.l||0)>=target).length;
-let h='<div class="card"><h2>👥 Theo dõi toàn cơ quan</h2>'
-+'<div class="stat"><span>Quân số đã đăng ký</span><b>'+rows.length+'</b></div>'
+const myName=(profile()||{}).name||"";
+const myScope=myName.indexOf(".")>0?myName.split(".").slice(0,-1).join(".")+".*":"toàn hệ thống";
+let h='<div class="card"><h2>👥 Theo dõi đơn vị thuộc quyền</h2>'
++'<div class="stat"><span>Phạm vi xem (theo mật danh)</span><b>'+esc(myScope)+'</b></div>'
++'<div class="stat"><span>Quân số trong phạm vi</span><b>'+rows.length+'</b></div>'
 +'<div class="stat"><span>Chỉ tiêu đến tuần này</span><b>'+target+' câu</b></div>'
 +'<div class="stat"><span>Đạt chỉ tiêu</span><b>'+dat+'/'+rows.length+'</b></div>'
 +'<div class="btnrow"><button class="btn btn-o" onclick="renderAdmin()">🔄 Cập nhật</button><button class="btn btn-g" onclick="copySummary()">📋 Sao chép báo cáo tổng hợp</button></div></div>';
@@ -736,7 +739,7 @@ let h='<div class="card"><h2>👤 Thông tin cá nhân</h2>'
 +(prof.hn?'<div class="stat"><span>Họ và tên</span><b>'+esc(prof.hn)+'</b></div>':'')
 +'<div class="stat"><span>Vai trò</span><b>'+(ROLES[prof.role]||"")+'</b></div>'
 +'<div class="stat"><span>Đồng bộ về cơ quan</span><b>'+(apiReady()?(LS.get("ta_dirty",0)?"⏳ Chờ gửi (thiếu mạng)":"✅ Đã gửi"):"Chưa cấu hình máy chủ")+'</b></div>'
-+'<div class="note"><a href="javascript:resetProfile()" style="color:var(--muted)">🚪 Đăng xuất khỏi máy này</a></div></div>'
++'<div class="btnrow1" style="margin-top:10px"><button class="btn" style="background:#fdecea;color:#c0392b;border:1px solid #f2c4bd" onclick="resetProfile()">↩️ Đăng xuất khỏi máy này</button></div></div>'
 +'<div class="card"><h2>📊 Kết quả học tập</h2>'
 +'<div class="stat"><span>Câu đã thuộc</span><b>'+nl+' / '+S.length+' câu ('+pct+'%)</b></div><div class="bar"><i style="width:'+pct+'%"></i></div>'
 +'<div class="stat"><span>Tiến độ phong trào</span><b>'+(idx<0?"Chưa bắt đầu (20/7/2026)":Math.floor(idx/7)>=wkCount()?"Đã hoàn thành "+wkCount()+" tuần":"Ngày "+(idx+1)+" · Tuần "+week)+'</b></div>'
