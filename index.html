@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow"><!-- chặn máy tìm kiếm lập chỉ mục trang -->
+<meta name="theme-color" content="#2e5339"><!-- tô vùng thanh trạng thái cùng màu app (iOS/Android) -->
 <title>Phần mềm tự học tiếng Anh - Phòng Cán bộ</title>
 <meta property="og:title" content="Phần mềm tự học tiếng Anh - Phòng Cán bộ">
 <meta property="og:description" content="Phong trào &quot;Mỗi ngày học một câu giao tiếp tiếng Anh&quot; - mỗi ngày một bước tiến">
@@ -15,7 +16,7 @@
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
 html,body{max-width:100%;overflow-x:hidden;}
 body{background:var(--bg);color:var(--text);padding-bottom:70px;padding-bottom:calc(70px + env(safe-area-inset-bottom,0px));}
-header{background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;text-align:center;padding:16px 14px 12px;padding:calc(16px + env(safe-area-inset-top,0px)) calc(14px + env(safe-area-inset-right,0px)) 12px calc(14px + env(safe-area-inset-left,0px));}
+header{background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;text-align:center;padding:16px 14px 12px;} /* không tự đệm tai thỏ - hệ điều hành + theme-color lo phần đó */
 header h1{font-size:clamp(12px,3.7vw,17px);letter-spacing:.3px;white-space:nowrap;} /* tiêu đề luôn nằm gọn 1 dòng */
 header .sub{font-size:clamp(9px,2.8vw,12px);opacity:.85;margin-top:3px;white-space:nowrap;}
 header .slogan{font-size:11px;color:#ffe9a8;margin-top:5px;font-style:italic;}
@@ -99,11 +100,11 @@ textarea{width:100%;min-height:170px;border:1px solid #d5ddd0;border-radius:10px
 </div>
 <div style="padding:16px 16px 14px">
 <div style="font-size:14px;font-weight:700;color:var(--green);margin-bottom:6px">Đăng nhập để bắt đầu học</div>
-<div class="note" style="margin-bottom:10px">Nhập <b>mật danh được cấp</b> (do đồng chí phụ trách phong trào cấp cho từng người). Chưa có mật danh thì liên hệ đồng chí phụ trách. Tự giác học thật — hệ thống ghi nhận theo từng cá nhân.</div>
-<input type="text" id="rname" autocapitalize="none" autocorrect="off" placeholder="Mật danh (VD: 01.05.balv)">
-<button class="btn btn-g" style="width:100%" id="regbtn" onclick="doRegister()">🔑 Đăng nhập</button>
-<div class="note" id="rmsg" style="min-height:18px"></div>
-<div style="text-align:center;font-size:11px;color:var(--muted);margin-top:4px;font-style:italic">"Mỗi ngày một câu tiếng Anh - Mỗi ngày một bước tiến"</div>
+<div class="note" style="margin-bottom:10px">Nhập <b>mật danh được cấp</b> (do đồng chí quản trị viên cấp cho từng người). Chủ động học thật - hệ thống ghi nhận theo từng cá nhân.</div>
+<input type="text" id="rname" autocapitalize="none" autocorrect="off" placeholder="Mật danh (ví dụ: 01.05.hunghh)" style="height:44px;padding:0 12px;margin-bottom:10px">
+<button class="btn btn-g" style="width:100%;height:44px;padding:0" id="regbtn" onclick="doRegister()">Đăng nhập</button>
+<div class="note" id="rmsg" style="min-height:0;margin:6px 0 0"></div>
+<div style="text-align:center;font-size:11px;color:var(--muted);margin:14px 0 0;font-style:italic">"Mỗi ngày một câu tiếng Anh - Mỗi ngày một bước tiến"</div>
 </div>
 </div>
 </div>
@@ -342,20 +343,30 @@ const res=await api({action:"seedbank",rows:rows});
 if(res.ok)LS.set("ta_seeded",1);
 }catch(e){}
 }
-// Hồ sơ cũ chưa có họ tên: tự hỏi máy chủ bổ sung, không bắt đăng nhập lại
-async function refreshProfileInfo(){
+// Mỗi lần mở app: đối chiếu mật danh đã lưu với bảng DangKy trên máy chủ.
+// - Còn khớp: cập nhật họ tên/vai trò mới nhất, gộp tiến độ.
+// - Không khớp (mật danh đã bị điều chỉnh/xóa): TỰ ĐĂNG XUẤT, đưa về màn đăng nhập.
+async function verifyProfile(){
 const p=profile();
-if(!p||!apiReady()||p.hn)return;
+if(!p||!apiReady())return;
 try{
 const res=await api({action:"login",name:p.name,dev:devId()});
-if(res.ok){
-p.hn=String(res.hn||"");
-p.role=res.role==="chihuy"?"chihuy":p.role;
+if(res&&res.ok===false){ // máy chủ trả lời rõ: mật danh không còn tồn tại
+localStorage.removeItem("ta_profile");
+localStorage.removeItem("ta_learned");
+localStorage.removeItem("ta_quiz");
+localStorage.removeItem("ta_dirty");
+location.reload();
+return;
+}
+if(res&&res.ok){
+p.hn=String(res.hn||p.hn||"");
+p.role=res.role==="chihuy"?"chihuy":"troly";
 LS.set("ta_profile",p);
 if(res.learned){String(res.learned).split(/[-,;]/).map(Number).filter(function(n){return Number.isInteger(n)&&n>=0;}).forEach(function(n){learned.add(n);});saveLearned();}
 initProfile();
 }
-}catch(e){}
+}catch(e){/* mất mạng: bỏ qua, lần mở sau kiểm tra tiếp */}
 }
 async function resetProfile(){ // Đăng xuất: xóa hồ sơ + tiến độ cục bộ (tiến độ thật đã lưu trên máy chủ)
 if(!confirm("Đăng xuất khỏi máy này?\nTiến độ đã được lưu trên hệ thống — đăng nhập lại sẽ tự khôi phục."))return;
@@ -388,8 +399,63 @@ let h='<div class="card"><h2>👥 Theo dõi đơn vị thuộc quyền</h2>'
 h+='<div class="card" style="overflow-x:auto"><table class="adm"><tr><th>#</th><th>Họ tên / mật danh</th><th>Vai trò</th><th>Câu thuộc</th><th>Chỉ tiêu</th><th>KT gần nhất</th><th>Cập nhật</th></tr>';
 rows.forEach(function(r,i){h+='<tr><td>'+(i+1)+'</td><td><b>'+esc(String(r.hn||r.n||""))+'</b>'+(r.hn?'<div style="font-size:10.5px;color:var(--muted)">'+esc(String(r.n||""))+'</div>':'')+'</td><td>'+esc(ROLES[r.r]||String(r.r||""))+'</td><td><b>'+(r.l||0)+'/'+S.length+'</b></td><td>'+((r.l||0)>=target?"✅":"⚠")+'</td><td>'+esc(String(r.q||"—"))+'</td><td>'+esc(String(r.t||"—"))+'</td></tr>';});
 h+='</table></div>';
+// Khối quản trị tài khoản - chỉ dành cho mật danh .admin
+if(/(^|\.)admin$/.test(myName.toLowerCase())){
+const selSt='width:100%;padding:10px;border:1px solid #d5ddd0;border-radius:10px;font-size:16px;margin-bottom:8px;background:#fff';
+const opts=rows.map(function(r){return '<option value="'+esc(String(r.n||""))+'">'+esc((r.hn?r.hn+" — ":"")+String(r.n||""))+'</option>';}).join("");
+h+='<div class="card"><h2>🛠 Quản trị tài khoản</h2>'
++'<div class="note" style="margin-bottom:6px"><b>Thêm tài khoản mới</b></div>'
++'<input type="text" id="au_name" autocapitalize="none" autocorrect="off" placeholder="Mật danh (VD: 01.05.balv)">'
++'<input type="text" id="au_hn" placeholder="Họ và tên (VD: Lê Văn Ba)">'
++'<select id="au_role" style="'+selSt+'"><option value="troly">Trợ lý, nhân viên</option><option value="chihuy">Cán bộ chỉ huy</option></select>'
++'<div class="btnrow1"><button class="btn btn-g" onclick="adminAddUser()">➕ Thêm tài khoản</button></div>'
++'<div class="note" style="margin:14px 0 6px;border-top:1px dashed #dde3d8;padding-top:12px"><b>Sửa / xóa tài khoản</b></div>'
++'<select id="eu_sel" style="'+selSt+'" onchange="adminFillSel()"><option value="">— Chọn tài khoản —</option>'+opts+'</select>'
++'<input type="text" id="eu_name" autocapitalize="none" autocorrect="off" placeholder="Mật danh (sửa tại đây nếu muốn đổi)">'
++'<input type="text" id="eu_hn" placeholder="Họ và tên">'
++'<select id="eu_role" style="'+selSt+'"><option value="troly">Trợ lý, nhân viên</option><option value="chihuy">Cán bộ chỉ huy</option></select>'
++'<div class="btnrow1"><button class="btn btn-g" onclick="adminSaveUser()">💾 Lưu thay đổi</button><button class="btn" style="background:#fdecea;color:#c0392b;border:1px solid #f2c4bd" onclick="adminDelUser()">🗑 Xóa</button></div>'
++'<div class="note">Đổi mật danh tại đây: tiến độ tự chuyển theo tên mới, người đó chỉ cần đăng xuất - đăng nhập lại. Xóa tài khoản: người đó hết đăng nhập được (nhật ký cũ vẫn giữ).</div></div>';
+}
 window._admRows=rows;window._admTarget=target;
 b.innerHTML=h;
+}
+function _v(id){return (document.getElementById(id)||{value:""}).value.trim();}
+async function adminAddUser(){
+const name=_v("au_name").toLowerCase(),hn=_v("au_hn"),role=_v("au_role");
+if(!name){toast("⚠ Nhập mật danh cần thêm");return;}
+try{
+const r=await api({action:"adduser",by:(profile()||{}).name,name:name,hn:hn,role:role});
+toast(r.ok?"✅ Đã thêm tài khoản "+esc(name):"⚠ "+esc(r.msg||"Không thêm được"));
+if(r.ok)renderAdmin();
+}catch(e){toast("⚠ Lỗi mạng, thử lại.");}
+}
+function adminFillSel(){
+const t=_v("eu_sel");const rws=window._admRows||[];
+const r=rws.filter(function(x){return String(x.n)===t;})[0];
+if(!r)return;
+document.getElementById("eu_name").value=r.n||"";
+document.getElementById("eu_hn").value=r.hn||"";
+document.getElementById("eu_role").value=(r.r==="chihuy"?"chihuy":"troly");
+}
+async function adminSaveUser(){
+const t=_v("eu_sel");
+if(!t){toast("⚠ Chọn tài khoản cần sửa");return;}
+try{
+const r=await api({action:"edituser",by:(profile()||{}).name,target:t,newname:_v("eu_name").toLowerCase(),hn:_v("eu_hn"),role:_v("eu_role")});
+toast(r.ok?"✅ Đã lưu thay đổi":"⚠ "+esc(r.msg||"Không sửa được"));
+if(r.ok)renderAdmin();
+}catch(e){toast("⚠ Lỗi mạng, thử lại.");}
+}
+async function adminDelUser(){
+const t=_v("eu_sel");
+if(!t){toast("⚠ Chọn tài khoản cần xóa");return;}
+if(!confirm("Xóa tài khoản "+t+"?\nNgười này sẽ không đăng nhập được nữa (nhật ký học cũ vẫn giữ trong trang KetQua)."))return;
+try{
+const r=await api({action:"edituser",by:(profile()||{}).name,target:t,del:1});
+toast(r.ok?"✅ Đã xóa "+esc(t):"⚠ "+esc(r.msg||"Không xóa được"));
+if(r.ok)renderAdmin();
+}catch(e){toast("⚠ Lỗi mạng, thử lại.");}
 }
 function copySummary(){
 const rows=window._admRows||[];const target=window._admTarget||0;
@@ -786,7 +852,7 @@ if(typeof speechSynthesis!=="undefined"){speechSynthesis.getVoices();speechSynth
 applyBank();   // dùng ngân hàng câu của Cục (nếu đã tải về trước đó)
 renderToday();
 initProfile();
-refreshProfileInfo(); // bổ sung họ tên cho hồ sơ đăng nhập từ bản cũ
+verifyProfile(); // đối chiếu mật danh với bảng DangKy mỗi lần mở app + đồng bộ họ tên, vai trò
 fetchBank();   // kiểm tra ngân hàng câu mới trên Google Sheet
 // Cảnh báo khi mở trong trình duyệt con của Zalo/Facebook (âm thanh, micro không ổn định)
 (function(){
@@ -812,15 +878,7 @@ toTop();setTimeout(toTop,300);setTimeout(toTop,900);setTimeout(toTop,2000);
 document.body.style.paddingBottom="150px";
 const tb=document.querySelector(".tabs");
 tb.style.paddingBottom="6px";
-// nếu chạy toàn màn hình từ icon (hiếm) thì chừa thêm mép trên cho tai thỏ
-if(navigator.standalone===true){
-const hd=document.querySelector("header");
-if(parseFloat(getComputedStyle(hd).paddingTop)<=20){
-const notch=Math.max(screen.height,screen.width)>=812;
-hd.style.paddingTop=(notch?60:26)+"px";
-tb.style.paddingBottom=(notch?24:6)+"px";
-}
-}
+// (đã bỏ lớp tự đệm mép trên khi chạy từ icon - iOS mới tự xử lý, đệm thêm sẽ bị thừa mép)
 // 3) Bám theo vùng nhìn thấy thực tế: luôn ghim thanh menu ngay trên thanh công cụ Safari
 if(window.visualViewport){
 const fix=function(){
