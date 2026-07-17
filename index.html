@@ -261,7 +261,7 @@ function saveLearned(){LS.set("ta_learned",[...learned]);}
 // ============ CẤU HÌNH ĐỒNG BỘ (PA3 - Google Sheets) ============
 const API_URL="https://script.google.com/macros/s/AKfycbwKOGe3nHg6j34B65Q8i9zSzhO1Ub9_rNhaq7qtZtFP0mFeeZWoIThD0xP2a1S8wiz7nA/exec"; // <-- Bước cuối cùng: dán link Web App (Apps Script) vào đây
 const UNIT_CODE="cb.cct";  // Mã đơn vị: PHẢI TRÙNG với SECRET trong Apps Script. Nên đổi trước khi phát hành.
-const ADMIN_CODE="8686";      // Mã quản trị: đăng ký vai trò chỉ huy / cài lại máy. Nên đổi trước khi phát hành.
+// (đã bỏ mã quản trị: tài khoản do cơ quan cấp, vai trò lấy từ trang DangKy, đăng xuất không cần mã)
 const ROLES={chihuy:"Cán bộ chỉ huy",troly:"Trợ lý, nhân viên"};
 function apiReady(){return API_URL.indexOf("https://")===0;}
 function profile(){return LS.get("ta_profile",null);}
@@ -342,11 +342,28 @@ const res=await api({action:"seedbank",rows:rows});
 if(res.ok)LS.set("ta_seeded",1);
 }catch(e){}
 }
-function resetProfile(){
-const c=prompt("Nhập mã quản trị (do đồng chí phụ trách phong trào giữ):");
-if(c!==ADMIN_CODE){alert("Sai mã quản trị.");return;}
+// Hồ sơ cũ chưa có họ tên: tự hỏi máy chủ bổ sung, không bắt đăng nhập lại
+async function refreshProfileInfo(){
+const p=profile();
+if(!p||!apiReady()||p.hn)return;
+try{
+const res=await api({action:"login",name:p.name,dev:devId()});
+if(res.ok){
+p.hn=String(res.hn||"");
+p.role=res.role==="chihuy"?"chihuy":p.role;
+LS.set("ta_profile",p);
+if(res.learned){String(res.learned).split(/[-,;]/).map(Number).filter(function(n){return Number.isInteger(n)&&n>=0;}).forEach(function(n){learned.add(n);});saveLearned();}
+initProfile();
+}
+}catch(e){}
+}
+async function resetProfile(){ // Đăng xuất: xóa hồ sơ + tiến độ cục bộ (tiến độ thật đã lưu trên máy chủ)
+if(!confirm("Đăng xuất khỏi máy này?\nTiến độ đã được lưu trên hệ thống — đăng nhập lại sẽ tự khôi phục."))return;
+try{await trySync();}catch(e){} // gửi nốt phần đang chờ trước khi rời đi
 localStorage.removeItem("ta_profile");
-alert("Đã xóa đăng ký trên máy này.\nLưu ý: phải xóa dòng đăng ký cũ trong trang DangKy của Google Sheet thì mới đăng ký lại được.");
+localStorage.removeItem("ta_learned");
+localStorage.removeItem("ta_quiz");
+localStorage.removeItem("ta_dirty");
 location.reload();
 }
 async function renderAdmin(){
@@ -715,11 +732,11 @@ const target=targetNow();
 const t13=wkCount()>13?WKSTART[13]:S.length; // số câu theo lộ trình 13 tuần đầu (3 tháng)
 const pct=Math.round(nl/S.length*100);
 let h='<div class="card"><h2>👤 Thông tin cá nhân</h2>'
-+(prof.hn?'<div class="stat"><span>Họ và tên</span><b>'+esc(prof.hn)+'</b></div>':'')
 +'<div class="stat"><span>Mật danh</span><b>'+esc(prof.name)+'</b></div>'
++(prof.hn?'<div class="stat"><span>Họ và tên</span><b>'+esc(prof.hn)+'</b></div>':'')
 +'<div class="stat"><span>Vai trò</span><b>'+(ROLES[prof.role]||"")+'</b></div>'
 +'<div class="stat"><span>Đồng bộ về cơ quan</span><b>'+(apiReady()?(LS.get("ta_dirty",0)?"⏳ Chờ gửi (thiếu mạng)":"✅ Đã gửi"):"Chưa cấu hình máy chủ")+'</b></div>'
-+'<div class="note"><a href="javascript:resetProfile()" style="color:var(--muted)">Cài lại thông tin đăng ký (cần mã quản trị)</a></div></div>'
++'<div class="note"><a href="javascript:resetProfile()" style="color:var(--muted)">🚪 Đăng xuất khỏi máy này</a></div></div>'
 +'<div class="card"><h2>📊 Kết quả học tập</h2>'
 +'<div class="stat"><span>Câu đã thuộc</span><b>'+nl+' / '+S.length+' câu ('+pct+'%)</b></div><div class="bar"><i style="width:'+pct+'%"></i></div>'
 +'<div class="stat"><span>Tiến độ phong trào</span><b>'+(idx<0?"Chưa bắt đầu (20/7/2026)":Math.floor(idx/7)>=wkCount()?"Đã hoàn thành "+wkCount()+" tuần":"Ngày "+(idx+1)+" · Tuần "+week)+'</b></div>'
@@ -766,6 +783,7 @@ if(typeof speechSynthesis!=="undefined"){speechSynthesis.getVoices();speechSynth
 applyBank();   // dùng ngân hàng câu của Cục (nếu đã tải về trước đó)
 renderToday();
 initProfile();
+refreshProfileInfo(); // bổ sung họ tên cho hồ sơ đăng nhập từ bản cũ
 fetchBank();   // kiểm tra ngân hàng câu mới trên Google Sheet
 // Cảnh báo khi mở trong trình duyệt con của Zalo/Facebook (âm thanh, micro không ổn định)
 (function(){
