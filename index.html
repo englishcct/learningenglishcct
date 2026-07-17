@@ -95,20 +95,14 @@ textarea{width:100%;min-height:170px;border:1px solid #d5ddd0;border-radius:10px
 <div style="font-size:18px;font-weight:800;letter-spacing:.6px;line-height:1.35">PHẦN MỀM TỰ HỌC TIẾNG ANH</div>
 <div style="font-size:13.5px;color:#ffe9a8;font-weight:700;margin-top:5px;letter-spacing:.3px">PHÒNG CÁN BỘ</div>
 <div style="font-size:12px;opacity:.9;margin-top:2px">Cục Chính trị Quân khu 5</div>
-<div style="font-size:11.5px;opacity:.8;margin-top:8px;font-style:italic;border-top:1px solid rgba(255,255,255,.25);padding-top:8px">Phong trào "Mỗi ngày học một câu giao tiếp tiếng Anh"<br>Kế hoạch số 277/KH-CT ngày 09/7/2026</div>
+<div style="font-size:11.5px;opacity:.8;margin-top:8px;font-style:italic;border-top:1px solid rgba(255,255,255,.25);padding-top:8px">Phong trào "Mỗi ngày học một câu giao tiếp tiếng Anh"<br>Kế hoạch số 277/KH-CT ngày 09/7/2026 của Cục Chính trị</div>
 </div>
 <div style="padding:16px 16px 14px">
 <div style="font-size:14px;font-weight:700;color:var(--green);margin-bottom:6px">Đăng nhập để bắt đầu học</div>
-<div class="note" style="margin-bottom:10px">Nhập <b>đúng họ và tên</b> theo danh sách cơ quan đã lập. Kết quả học tập được cơ quan theo dõi theo từng cá nhân — tự giác học thật, không khai hộ.</div>
-<input type="text" id="rname" placeholder="Họ và tên (VD: Nguyễn Văn An)">
-<div style="margin:4px 0 6px;font-size:14px" id="regroles">
-<label style="display:block;padding:5px 0"><input type="radio" name="rrole" value="troly" checked> Trợ lý, nhân viên</label>
-<label style="display:block;padding:5px 0"><input type="radio" name="rrole" value="chihuy"> Cán bộ chỉ huy</label>
-</div>
-<input type="text" id="rcode" placeholder="Mã quản trị (chỉ nhập nếu là cán bộ chỉ huy)">
-<button class="btn btn-g" style="width:100%" id="regbtn" onclick="doRegister()">✅ Đăng ký và bắt đầu học</button>
+<div class="note" style="margin-bottom:10px">Nhập <b>mật danh được cấp</b> (do đồng chí phụ trách phong trào cấp cho từng người). Chưa có mật danh thì liên hệ đồng chí phụ trách. Tự giác học thật — hệ thống ghi nhận theo từng cá nhân.</div>
+<input type="text" id="rname" autocapitalize="none" autocorrect="off" placeholder="Mật danh (VD: 01.05.balv)">
+<button class="btn btn-g" style="width:100%" id="regbtn" onclick="doRegister()">🔑 Đăng nhập</button>
 <div class="note" id="rmsg" style="min-height:18px"></div>
-<div class="note" style="text-align:center;margin-top:2px"><a href="javascript:toggleLogin()" id="loginlink" style="color:var(--green);font-weight:600">Đã đăng ký trước đó? Đăng nhập lại</a></div>
 <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:4px;font-style:italic">"Mỗi ngày một câu tiếng Anh - Mỗi ngày một bước tiến"</div>
 </div>
 </div>
@@ -279,57 +273,36 @@ let h=5381;for(let i=0;i<s.length;i++){h=((h<<5)+h+s.charCodeAt(i))>>>0;}
 d="M"+h.toString(36).toUpperCase();
 LS.set("ta_dev",d);return d;
 }
-async function api(body){const r=await fetch(API_URL,{method:"POST",body:JSON.stringify(Object.assign({u:UNIT_CODE},body))});return await r.json();}
+async function api(body){const r=await fetch(API_URL,{method:"POST",keepalive:true,body:JSON.stringify(Object.assign({u:UNIT_CODE},body))});return await r.json();}
 function initProfile(){
 const p=profile();
-if(!p){document.getElementById("reg").style.display="flex";if(regMode==="reg")toggleLogin();return;} // mặc định: Đăng nhập (tài khoản do cơ quan cấp)
+if(!p){document.getElementById("reg").style.display="flex";return;} // chưa đăng nhập: hiện màn đăng nhập bằng mật danh
 if(p.role==="chihuy")document.getElementById("tabadmin").style.display="block";
 trySync();
 }
-let regMode="reg";
-function toggleLogin(){
-regMode=regMode==="reg"?"login":"reg";
-document.getElementById("regroles").style.display=regMode==="reg"?"block":"none";
-document.getElementById("rcode").style.display=regMode==="reg"?"block":"none";
-document.getElementById("regbtn").innerHTML=regMode==="reg"?"✅ Đăng ký và bắt đầu học":"🔑 Đăng nhập";
-document.getElementById("loginlink").textContent=regMode==="reg"?"Đã có tài khoản? Đăng nhập":"Chưa có tài khoản? Đăng ký mới";
-document.getElementById("rmsg").textContent="";
-}
+// Đăng nhập bằng mật danh do cơ quan cấp (không có tự đăng ký - kiểm soát số lượng tài khoản)
 async function doRegister(){
-const n=document.getElementById("rname").value.trim();
+const n=document.getElementById("rname").value.trim().toLowerCase();
 const st=document.getElementById("rmsg");
-if(n.length<5||n.split(/\s+/).length<2){st.textContent="⚠ Nhập đầy đủ họ và tên (VD: Nguyễn Văn An)";return;}
-if(regMode==="login"){
+if(n.length<4||/\s/.test(n)){st.textContent="⚠ Nhập đúng mật danh được cấp, không có dấu cách (VD: 01.05.balv)";return;}
 if(!apiReady()){st.textContent="⚠ Đăng nhập cần kết nối máy chủ";return;}
 st.textContent="Đang đăng nhập...";
 try{
 const res=await api({action:"login",name:n,dev:devId()});
 if(!res.ok){st.textContent="⚠ "+(res.msg||"Đăng nhập thất bại");return;}
-LS.set("ta_profile",{name:n,role:res.role==="chihuy"?"chihuy":"troly"});
-if(res.learned!==undefined&&res.learned!==""){learned=new Set(String(res.learned).split(",").filter(function(x){return x!=="";}).map(Number));saveLearned();}
+LS.set("ta_profile",{name:n,role:res.role==="chihuy"?"chihuy":"troly",hn:String(res.hn||"")});
+if(res.learned!==undefined&&res.learned!==""){learned=new Set(String(res.learned).split(/[-,;]/).map(function(x){return Number(x);}).filter(function(n2){return Number.isInteger(n2)&&n2>=0;}));saveLearned();}
 }catch(e){st.textContent="⚠ Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.";return;}
-document.getElementById("reg").style.display="none";
-initProfile();renderToday();return;
-}
-const role=document.querySelector("input[name=rrole]:checked").value;
-if(role==="chihuy"&&document.getElementById("rcode").value.trim()!==ADMIN_CODE){st.textContent="⚠ Vai trò chỉ huy cần mã quản trị đúng (liên hệ đồng chí phụ trách phong trào)";return;}
-st.textContent="Đang đăng ký...";
-if(apiReady()){
-try{const res=await api({action:"register",name:n,role:role,dev:devId()});
-if(!res.ok){st.textContent="⚠ "+(res.msg||"Đăng ký bị từ chối");return;}}
-catch(e){st.textContent="⚠ Không kết nối được máy chủ. Kiểm tra mạng Internet rồi thử lại.";return;}
-}
-LS.set("ta_profile",{name:n,role:role});
 document.getElementById("reg").style.display="none";
 initProfile();renderToday();
 }
 let syncTimer=null;
-function scheduleSync(){LS.set("ta_dirty",1);clearTimeout(syncTimer);syncTimer=setTimeout(trySync,1500);}
+function scheduleSync(){LS.set("ta_dirty",1);clearTimeout(syncTimer);syncTimer=setTimeout(trySync,120000);} // gom kết quả, 2 phút gửi 1 lần (giảm tải máy chủ khi đông người)
 async function trySync(){
 const p=profile();
 if(!p||!apiReady()||!LS.get("ta_dirty",0))return;
 const hist=LS.get("ta_quiz",[]);const lq=hist.length?hist[hist.length-1]:null;
-try{const res=await api({action:"submit",name:p.name,role:p.role,dev:devId(),learned:learned.size,quiz:lq?(lq.s+"/"+lq.t):"",day:todayIdx()+1,list:[...learned].sort(function(a,b){return a-b;}).join(",")});
+try{const res=await api({action:"submit",name:p.name,role:p.role,dev:devId(),learned:learned.size,quiz:lq?(lq.s+"/"+lq.t):"",day:todayIdx()+1,list:[...learned].sort(function(a,b){return a-b;}).join("-")});
 if(res.ok)LS.set("ta_dirty",0);}catch(e){/* mất mạng: giữ lại, tự gửi bù lần sau */}
 }
 // ---- Ngân hàng câu dùng chung (do Bảo tàng QK xây dựng, dán vào trang NganHang trên Sheet) ----
@@ -382,7 +355,7 @@ const b=document.getElementById("pg4");
 if(!apiReady()){b.innerHTML='<div class="card"><h2>👥 Quản lý</h2><div class="note">Chưa cấu hình link máy chủ (API_URL trong file). Xem file "Huong dan thiet lap".</div></div>';return;}
 b.innerHTML='<div class="card"><h2>👥 Theo dõi toàn cơ quan</h2><div class="note">⏳ Đang tải dữ liệu...</div></div>';
 let rows=[];
-try{const r=await fetch(API_URL+"?u="+encodeURIComponent(UNIT_CODE)+"&action=fetch");const j=await r.json();if(!j.ok)throw 0;rows=j.rows||[];}
+try{const r=await fetch(API_URL+"?u="+encodeURIComponent(UNIT_CODE)+"&action=fetch&n="+encodeURIComponent((profile()||{}).name||""));const j=await r.json();if(!j.ok)throw 0;rows=j.rows||[];}
 catch(e){b.innerHTML='<div class="card"><h2>👥 Theo dõi toàn cơ quan</h2><div class="note">⚠ Không tải được dữ liệu. Kiểm tra mạng hoặc link máy chủ.</div><div class="btnrow"><button class="btn btn-g" onclick="renderAdmin()">🔄 Thử lại</button></div></div>';return;}
 const idx=todayIdx();const target=targetNow();
 rows.sort((a,b2)=>(b2.l||0)-(a.l||0));
@@ -392,8 +365,8 @@ let h='<div class="card"><h2>👥 Theo dõi toàn cơ quan</h2>'
 +'<div class="stat"><span>Chỉ tiêu đến tuần này</span><b>'+target+' câu</b></div>'
 +'<div class="stat"><span>Đạt chỉ tiêu</span><b>'+dat+'/'+rows.length+'</b></div>'
 +'<div class="btnrow"><button class="btn btn-o" onclick="renderAdmin()">🔄 Cập nhật</button><button class="btn btn-g" onclick="copySummary()">📋 Sao chép báo cáo tổng hợp</button></div></div>';
-h+='<div class="card" style="overflow-x:auto"><table class="adm"><tr><th>#</th><th>Họ tên</th><th>Vai trò</th><th>Câu thuộc</th><th>Chỉ tiêu</th><th>KT gần nhất</th><th>Cập nhật</th></tr>';
-rows.forEach(function(r,i){h+='<tr><td>'+(i+1)+'</td><td>'+esc(String(r.n||""))+'</td><td>'+esc(ROLES[r.r]||String(r.r||""))+'</td><td><b>'+(r.l||0)+'/'+S.length+'</b></td><td>'+((r.l||0)>=target?"✅":"⚠")+'</td><td>'+esc(String(r.q||"—"))+'</td><td>'+esc(String(r.t||"—"))+'</td></tr>';});
+h+='<div class="card" style="overflow-x:auto"><table class="adm"><tr><th>#</th><th>Họ tên / mật danh</th><th>Vai trò</th><th>Câu thuộc</th><th>Chỉ tiêu</th><th>KT gần nhất</th><th>Cập nhật</th></tr>';
+rows.forEach(function(r,i){h+='<tr><td>'+(i+1)+'</td><td><b>'+esc(String(r.hn||r.n||""))+'</b>'+(r.hn?'<div style="font-size:10.5px;color:var(--muted)">'+esc(String(r.n||""))+'</div>':'')+'</td><td>'+esc(ROLES[r.r]||String(r.r||""))+'</td><td><b>'+(r.l||0)+'/'+S.length+'</b></td><td>'+((r.l||0)>=target?"✅":"⚠")+'</td><td>'+esc(String(r.q||"—"))+'</td><td>'+esc(String(r.t||"—"))+'</td></tr>';});
 h+='</table></div>';
 window._admRows=rows;window._admTarget=target;
 b.innerHTML=h;
@@ -401,7 +374,7 @@ b.innerHTML=h;
 function copySummary(){
 const rows=window._admRows||[];const target=window._admTarget||0;
 let t="BÁO CÁO TỔNG HỢP PHONG TRÀO HỌC TIẾNG ANH\n(KH 277/KH-CT - Phòng Cán bộ)\nNgày: "+new Date().toLocaleDateString("vi-VN")+"\nQuân số tham gia: "+rows.length+"\nChỉ tiêu đến tuần này: "+target+" câu\nĐạt chỉ tiêu: "+rows.filter(r=>(r.l||0)>=target).length+"/"+rows.length+"\n-----------------------------------\n";
-rows.forEach(function(r,i){t+=(i+1)+". "+r.n+" ("+(ROLES[r.r]||r.r)+"): "+(r.l||0)+"/"+S.length+" câu"+((r.l||0)>=target?" - ĐẠT":" - CHƯA ĐẠT")+(r.q?(", KT: "+r.q):"")+"\n";});
+rows.forEach(function(r,i){t+=(i+1)+". "+(r.hn?r.hn+" ("+r.n+")":r.n)+": "+(r.l||0)+"/"+S.length+" câu"+((r.l||0)>=target?" - ĐẠT":" - CHƯA ĐẠT")+(r.q?(", KT: "+r.q):"")+"\n";});
 if(navigator.clipboard){navigator.clipboard.writeText(t).then(function(){alert("Đã sao chép báo cáo tổng hợp. Dán vào Zalo để gửi.");});}else{prompt("Sao chép nội dung:",t);}
 }
 function speak(t,slow){
@@ -742,7 +715,8 @@ const target=targetNow();
 const t13=wkCount()>13?WKSTART[13]:S.length; // số câu theo lộ trình 13 tuần đầu (3 tháng)
 const pct=Math.round(nl/S.length*100);
 let h='<div class="card"><h2>👤 Thông tin cá nhân</h2>'
-+'<div class="stat"><span>Họ tên</span><b>'+esc(prof.name)+'</b></div>'
++(prof.hn?'<div class="stat"><span>Họ và tên</span><b>'+esc(prof.hn)+'</b></div>':'')
++'<div class="stat"><span>Mật danh</span><b>'+esc(prof.name)+'</b></div>'
 +'<div class="stat"><span>Vai trò</span><b>'+(ROLES[prof.role]||"")+'</b></div>'
 +'<div class="stat"><span>Đồng bộ về cơ quan</span><b>'+(apiReady()?(LS.get("ta_dirty",0)?"⏳ Chờ gửi (thiếu mạng)":"✅ Đã gửi"):"Chưa cấu hình máy chủ")+'</b></div>'
 +'<div class="note"><a href="javascript:resetProfile()" style="color:var(--muted)">Cài lại thông tin đăng ký (cần mã quản trị)</a></div></div>'
@@ -770,7 +744,7 @@ vs.forEach(function(v){h+='<option value="'+esc(v.name)+'"'+(cur===v.name?' sele
 return h;
 }
 function makeReport(){
-const prof=profile();const name=prof?(prof.name+" ("+(ROLES[prof.role]||"")+")"):"(chưa đăng ký)";const idx=todayIdx();const nl=learned.size;
+const prof=profile();const name=prof?((prof.hn?prof.hn+" — ":"")+prof.name+" ("+(ROLES[prof.role]||"")+")"):"(chưa đăng nhập)";const idx=todayIdx();const nl=learned.size;
 const week=idx<0?0:Math.min(wkCount(),Math.floor(idx/7)+1);
 const hist=LS.get("ta_quiz",[]);const lastQ=hist.length?hist[hist.length-1]:null;
 const target=targetNow();
@@ -802,7 +776,9 @@ d.innerHTML="⚠ Bạn đang mở trong trình duyệt của Zalo — <b>âm tha
 document.body.insertBefore(d,document.body.firstChild);
 }
 })();
-setInterval(trySync,60000); // tự gửi bù mỗi phút nếu còn dữ liệu chờ
+setInterval(trySync,180000); // tự gửi bù mỗi 3 phút nếu còn dữ liệu chờ
+// rời app (chuyển ứng dụng/tắt màn hình) thì gửi ngay phần còn chờ, không đợi hẹn giờ
+document.addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden"){clearTimeout(syncTimer);trySync();}});
 // ===== Vá hiển thị trên iPhone =====
 (function(){
 try{
