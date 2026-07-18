@@ -329,6 +329,7 @@ if(t)speak(t);
 }
 async function fetchBank(force){
 if(!apiReady())return;
+if(LS.get("ta_vids",null)===null)force=true; // máy chưa từng nhận dữ liệu video -> tải ngay, không chờ chu kỳ
 if(!force&&Date.now()-LS.get("ta_bank_t",0)<6*3600*1000)return; // chỉ kiểm tra 6 giờ/lần
 try{
 const r=await fetch(API_URL+"?u="+encodeURIComponent(UNIT_CODE)+"&action=bank");
