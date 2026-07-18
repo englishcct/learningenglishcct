@@ -719,7 +719,7 @@ h+='<div class="card"><h2>🎭 Tình huống thực hành tuần này</h2><div c
 // video bài học của tuần (nếu quản trị viên đã gắn link ở cột H trang NganHang)
 const vurl=(WEEKVID||[])[wkCal];
 if(vurl){
-h+='<div class="card"><h2>🎬 Video bài học tuần</h2>'
+h+='<div class="card"><h2>🎬 Video bài học tuần '+(wkCal+1)+' của Cục Chính trị</h2>'
 +'<video controls playsinline preload="metadata" style="width:100%;border-radius:12px;background:#000;margin-top:6px" src="'+esc(String(vurl))+'"></video>'
 +'<div class="note">Xem video trước, sau đó luyện nói từng câu bên trên.</div></div>';
 }
