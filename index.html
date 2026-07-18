@@ -309,6 +309,7 @@ if(res.ok)LS.set("ta_dirty",0);}catch(e){/* mất mạng: giữ lại, tự gử
 }
 // ---- Ngân hàng câu dùng chung (do Bảo tàng QK xây dựng, dán vào trang NganHang trên Sheet) ----
 let WEEKDLG=[]; // tình huống thực hành theo tuần lịch (cột G trang NganHang) - độc lập với số câu
+let WEEKVID=[]; // link video bài học tuần (cột H trang NganHang)
 function applyBank(){
 const b=LS.get("ta_bank",null);
 if(b&&b.length>=7){
@@ -320,6 +321,7 @@ if(i===0||String(r.w||"").trim()){WKSTART.push(i);WEEKS.push((r.w&&String(r.w).t
 if(WKSTART.length<=1){WEEKS=[];WKSTART=[];for(let i=0;i<S.length;i+=7){WKSTART.push(i);WEEKS.push("Tuần "+(i/7+1));}}
 }else{rebuildWeeksDefault();}
 WEEKDLG=LS.get("ta_dlg",[])||[];
+WEEKVID=LS.get("ta_vids",[])||[];
 }
 function speakDlg(w){
 const t=(WEEKDLG[w]||"").split("\n").map(function(l){return l.trim();}).filter(function(l){return /^[ABC]:/.test(l);}).map(function(l){return l.replace(/^[ABC]:\s*/,"");}).join(" ... ");
@@ -331,7 +333,7 @@ if(!force&&Date.now()-LS.get("ta_bank_t",0)<6*3600*1000)return; // chỉ kiểm 
 try{
 const r=await fetch(API_URL+"?u="+encodeURIComponent(UNIT_CODE)+"&action=bank");
 const j=await r.json();
-if(j.ok&&j.bank&&j.bank.length>=7){LS.set("ta_bank",j.bank);if(j.dlg)LS.set("ta_dlg",j.dlg);LS.set("ta_bank_t",Date.now());applyBank();renderToday();}
+if(j.ok&&j.bank&&j.bank.length>=7){LS.set("ta_bank",j.bank);if(j.dlg)LS.set("ta_dlg",j.dlg);if(j.vids)LS.set("ta_vids",j.vids);LS.set("ta_bank_t",Date.now());applyBank();renderToday();}
 else if(j.ok){LS.set("ta_bank_t",Date.now());seedDefaultBank();} // trang NganHang còn trống: dùng bộ câu mặc định
 }catch(e){}
 }
@@ -712,6 +714,13 @@ if(WEEKDLG.length&&WEEKDLG[wkCal]){
 h+='<div class="card"><h2>🎭 Tình huống thực hành tuần này</h2><div class="ex" style="margin-top:6px">'+esc(WEEKDLG[wkCal])+'</div>'
 +'<div class="btnrow"><button class="btn btn-o" onclick="speakDlg('+wkCal+')">🔊 Nghe hội thoại</button></div>'
 +'<div class="note">Luyện theo cặp: đọc chậm từng câu, đổi vai A/B, thực hành không nhìn tài liệu.</div></div>';
+}
+// video bài học của tuần (nếu quản trị viên đã gắn link ở cột H trang NganHang)
+const vurl=(WEEKVID||[])[wkCal];
+if(vurl){
+h+='<div class="card"><h2>🎬 Video bài học tuần</h2>'
++'<video controls playsinline preload="metadata" style="width:100%;border-radius:12px;background:#000;margin-top:6px" src="'+esc(String(vurl))+'"></video>'
++'<div class="note">Xem video trước, sau đó luyện nói từng câu bên trên.</div></div>';
 }
 // các câu trong tuần hiện tại
 h+='<div class="card"><h2>📌 Các câu trong tuần (ôn lại "10 phút tiếng Anh")</h2>';
