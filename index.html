@@ -467,11 +467,86 @@ let t="BÁO CÁO TỔNG HỢP PHONG TRÀO HỌC TIẾNG ANH\n(KH 277/KH-CT - Ph�
 rows.forEach(function(r,i){t+=(i+1)+". "+(r.hn?r.hn+" ("+r.n+")":r.n)+": "+(r.l||0)+"/"+S.length+" câu"+((r.l||0)>=target?" - ĐẠT":" - CHƯA ĐẠT")+(r.q?(", KT: "+r.q):"")+"\n";});
 if(navigator.clipboard){navigator.clipboard.writeText(t).then(function(){alert("Đã sao chép báo cáo tổng hợp. Dán vào Zalo để gửi.");});}else{prompt("Sao chép nội dung:",t);}
 }
+// ===== Giọng neural sinh sẵn: phát file mp3 nếu có, không có thì dùng giọng máy =====
+const AUDIO_DIR="audio/"; // thư mục file giọng neural đặt cạnh index.html trên GitHub
+function md5(s){ // md5 rút gọn để tính tên file trùng với script sinh giọng
+function L(k,d){return(k<<d)|(k>>>(32-d));}
+function K(G,k){var I,d,F,H,x;F=(G&0x80000000);H=(k&0x80000000);I=(G&0x40000000);d=(k&0x40000000);x=(G&0x3FFFFFFF)+(k&0x3FFFFFFF);
+if(I&d)return(x^0x80000000^F^H);if(I|d){if(x&0x40000000)return(x^0xC0000000^F^H);else return(x^0x40000000^F^H);}else return(x^F^H);}
+function r(x,y,z){return(x&y)|((~x)&z);}function q(x,y,z){return(x&z)|(y&(~z));}
+function p(x,y,z){return(x^y^z);}function n(x,y,z){return(y^(x|(~z)));}
+function u(G,k,I,d,F,H,x){G=K(G,K(K(r(k,I,d),F),x));return K(L(G,H),k);}
+function f(G,k,I,d,F,H,x){G=K(G,K(K(q(k,I,d),F),x));return K(L(G,H),k);}
+function D(G,k,I,d,F,H,x){G=K(G,K(K(p(k,I,d),F),x));return K(L(G,H),k);}
+function t(G,k,I,d,F,H,x){G=K(G,K(K(n(k,I,d),F),x));return K(L(G,H),k);}
+function e(G){var Y,k=G.length,I=k+8,d=(I-(I%64))/64,F=(d+1)*16,H=Array(F-1),x=0,X=0;
+while(X<k){Y=(X-(X%4))/4;x=(X%4)*8;H[Y]=(H[Y]|(G.charCodeAt(X)<<x));X++;}
+Y=(X-(X%4))/4;x=(X%4)*8;H[Y]=H[Y]|(0x80<<x);H[F-2]=k<<3;H[F-1]=k>>>29;return H;}
+function B(x){var k="",I="",d,F;for(F=0;F<=3;F++){d=(x>>>(F*8))&255;I="0"+d.toString(16);k=k+I.substr(I.length-2,2);}return k;}
+function J(k){k=k.replace(/\r\n/g,"\n");var I="";for(var d=0;d<k.length;d++){var F=k.charCodeAt(d);
+if(F<128)I+=String.fromCharCode(F);else if((F>127)&&(F<2048)){I+=String.fromCharCode((F>>6)|192);I+=String.fromCharCode((F&63)|128);}
+else{I+=String.fromCharCode((F>>12)|224);I+=String.fromCharCode(((F>>6)&63)|128);I+=String.fromCharCode((F&63)|128);}}return I;}
+var C=Array(),P,h,E,v,g,Y,X,W,V,S=7,Q=12,N=17,M=22,A=5,z=9,y=14,w=20,o=4,m=11,l=16,j=23,U=6,T=10,R=15,O=21;
+s=J(s);C=e(s);Y=1732584193;X=4023233417;W=2562383102;V=271733878;
+for(P=0;P<C.length;P+=16){h=Y;E=X;v=W;g=V;
+Y=u(Y,X,W,V,C[P+0],S,0xD76AA478);V=u(V,Y,X,W,C[P+1],Q,0xE8C7B756);W=u(W,V,Y,X,C[P+2],N,0x242070DB);X=u(X,W,V,Y,C[P+3],M,0xC1BDCEEE);
+Y=u(Y,X,W,V,C[P+4],S,0xF57C0FAF);V=u(V,Y,X,W,C[P+5],Q,0x4787C62A);W=u(W,V,Y,X,C[P+6],N,0xA8304613);X=u(X,W,V,Y,C[P+7],M,0xFD469501);
+Y=u(Y,X,W,V,C[P+8],S,0x698098D8);V=u(V,Y,X,W,C[P+9],Q,0x8B44F7AF);W=u(W,V,Y,X,C[P+10],N,0xFFFF5BB1);X=u(X,W,V,Y,C[P+11],M,0x895CD7BE);
+Y=u(Y,X,W,V,C[P+12],S,0x6B901122);V=u(V,Y,X,W,C[P+13],Q,0xFD987193);W=u(W,V,Y,X,C[P+14],N,0xA679438E);X=u(X,W,V,Y,C[P+15],M,0x49B40821);
+Y=f(Y,X,W,V,C[P+1],A,0xF61E2562);V=f(V,Y,X,W,C[P+6],z,0xC040B340);W=f(W,V,Y,X,C[P+11],y,0x265E5A51);X=f(X,W,V,Y,C[P+0],w,0xE9B6C7AA);
+Y=f(Y,X,W,V,C[P+5],A,0xD62F105D);V=f(V,Y,X,W,C[P+10],z,0x2441453);W=f(W,V,Y,X,C[P+15],y,0xD8A1E681);X=f(X,W,V,Y,C[P+4],w,0xE7D3FBC8);
+Y=f(Y,X,W,V,C[P+9],A,0x21E1CDE6);V=f(V,Y,X,W,C[P+14],z,0xC33707D6);W=f(W,V,Y,X,C[P+3],y,0xF4D50D87);X=f(X,W,V,Y,C[P+8],w,0x455A14ED);
+Y=f(Y,X,W,V,C[P+13],A,0xA9E3E905);V=f(V,Y,X,W,C[P+2],z,0xFCEFA3F8);W=f(W,V,Y,X,C[P+7],y,0x676F02D9);X=f(X,W,V,Y,C[P+12],w,0x8D2A4C8A);
+Y=D(Y,X,W,V,C[P+5],o,0xFFFA3942);V=D(V,Y,X,W,C[P+8],m,0x8771F681);W=D(W,V,Y,X,C[P+11],l,0x6D9D6122);X=D(X,W,V,Y,C[P+14],j,0xFDE5380C);
+Y=D(Y,X,W,V,C[P+1],o,0xA4BEEA44);V=D(V,Y,X,W,C[P+4],m,0x4BDECFA9);W=D(W,V,Y,X,C[P+7],l,0xF6BB4B60);X=D(X,W,V,Y,C[P+10],j,0xBEBFBC70);
+Y=D(Y,X,W,V,C[P+13],o,0x289B7EC6);V=D(V,Y,X,W,C[P+0],m,0xEAA127FA);W=D(W,V,Y,X,C[P+3],l,0xD4EF3085);X=D(X,W,V,Y,C[P+6],j,0x4881D05);
+Y=D(Y,X,W,V,C[P+9],o,0xD9D4D039);V=D(V,Y,X,W,C[P+12],m,0xE6DB99E5);W=D(W,V,Y,X,C[P+15],l,0x1FA27CF8);X=D(X,W,V,Y,C[P+2],j,0xC4AC5665);
+Y=t(Y,X,W,V,C[P+0],U,0xF4292244);V=t(V,Y,X,W,C[P+7],T,0x432AFF97);W=t(W,V,Y,X,C[P+14],R,0xAB9423A7);X=t(X,W,V,Y,C[P+5],O,0xFC93A039);
+Y=t(Y,X,W,V,C[P+12],U,0x655B59C3);V=t(V,Y,X,W,C[P+3],T,0x8F0CCC92);W=t(W,V,Y,X,C[P+10],R,0xFFEFF47D);X=t(X,W,V,Y,C[P+1],O,0x85845DD1);
+Y=t(Y,X,W,V,C[P+8],U,0x6FA87E4F);V=t(V,Y,X,W,C[P+15],T,0xFE2CE6E0);W=t(W,V,Y,X,C[P+6],R,0xA3014314);X=t(X,W,V,Y,C[P+13],O,0x4E0811A1);
+Y=t(Y,X,W,V,C[P+4],U,0xF7537E82);V=t(V,Y,X,W,C[P+11],T,0xBD3AF235);W=t(W,V,Y,X,C[P+2],R,0x2AD7D2BB);X=t(X,W,V,Y,C[P+9],O,0xEB86D391);
+Y=K(Y,h);X=K(X,E);W=K(W,v);V=K(V,g);}
+return(B(Y)+B(X)+B(W)+B(V)).toLowerCase();
+}
+// Danh mục audio/index.json: {mã băm câu -> tên file đánh số}. Không có danh mục thì dùng thẳng tên mã băm.
+let AUDIO_MAP=null;
+function loadAudioMap(){
+try{
+const c=LS.get("ta_amap",null);
+if(c)AUDIO_MAP=c;
+fetch(AUDIO_DIR+"index.json",{cache:"no-cache"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+if(j&&typeof j==="object"){AUDIO_MAP=j;LS.set("ta_amap",j);}
+}).catch(function(){});
+}catch(e){}
+}
+function audioFile(t){
+const h=md5(String(t).trim().toLowerCase()).substr(0,16);
+if(AUDIO_MAP&&AUDIO_MAP[h])return AUDIO_DIR+AUDIO_MAP[h];
+return AUDIO_DIR+h+".mp3";
+}
+let _player=null;
+const _audioMiss={}; // nhớ câu nào không có file để lần sau khỏi thử lại
 function speak(t,slow){
+try{
+if(_player){try{_player.pause();}catch(e){}_player=null;}
+try{if(typeof speechSynthesis!=="undefined")speechSynthesis.cancel();}catch(e){}
+const key=String(t).trim().toLowerCase();
+if(!_audioMiss[key]){ // thử phát file giọng neural sinh sẵn
+const a=new Audio(audioFile(t));
+a.playbackRate=slow?0.7:1;
+a.onerror=function(){_audioMiss[key]=1;_speakFallback(t,slow);};
+const p=a.play();
+if(p&&p.catch)p.catch(function(){_audioMiss[key]=1;_speakFallback(t,slow);});
+_player=a;return;
+}
+_speakFallback(t,slow);
+}catch(e){_speakFallback(t,slow);}
+}
+function _speakFallback(t,slow){ // giọng có sẵn trong máy
 try{
 if(typeof speechSynthesis==="undefined"){toast("⚠ Trình duyệt này không phát âm được — hãy mở bằng Chrome/Safari.");return;}
 speechSynthesis.cancel();
-setTimeout(function(){_speakNow(t,slow,1);},120); // chờ nhả loa/micro rồi mới đọc
+setTimeout(function(){_speakNow(t,slow,1);},120);
 }catch(e){}
 }
 // Chấm điểm chọn giọng đọc tự nhiên nhất có trên máy (ưu tiên Natural/Neural/Enhanced/Google...)
@@ -882,6 +957,7 @@ document.getElementById("rep").value=r;
 function copyReport(){const t=document.getElementById("rep");if(!t.value)makeReport();t.select();try{document.execCommand("copy");alert("Đã sao chép báo cáo. Dán vào Zalo để gửi.");}catch(e){alert("Hãy bôi đen và sao chép thủ công.");}}
 // khởi động
 if(typeof speechSynthesis!=="undefined"){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{};}
+loadAudioMap(); // tải danh mục file giọng neural
 applyBank();   // dùng ngân hàng câu của Cục (nếu đã tải về trước đó)
 renderToday();
 initProfile();
