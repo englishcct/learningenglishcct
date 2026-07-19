@@ -475,23 +475,43 @@ setTimeout(function(){_speakNow(t,slow,1);},120); // chờ nhả loa/micro rồi
 }catch(e){}
 }
 // Chấm điểm chọn giọng đọc tự nhiên nhất có trên máy (ưu tiên Natural/Neural/Enhanced/Google...)
+// Giọng "đồ chơi"/hiệu ứng của Apple - TUYỆT ĐỐI không dùng để đọc bài
+const BAD_VOICES=/(grandma|grandpa|jester|organ|cellos|zarvox|rocko|shelley|superstar|eddy|bells|boing|bubbles|trinoids|whisper|kathy|reed|albert|bahh|junior|princess|deranged|hysterical|wobble|sandy|flo|ralph|fred|bad news|good news|pipe)/i;
+// Giọng người thật, nghe tự nhiên (ưu tiên từ trên xuống)
+const GOOD_VOICES=/(samantha|ava|allison|susan|evan|nicky|aaron|alex|tom|joelle|zoe|karen|daniel|moira|tessa|serena|arthur|martha|catherine|jamie)/i;
+// Xếp hạng chất lượng theo mã định danh giọng: premium/enhanced/neural > mặc định > compact (bản nén, rè)
+function vQual(v){
+const u=((v.voiceURI||"")+" "+(v.name||"")).toLowerCase();
+if(/premium|enhanced|neural|natural|nâng cao/.test(u))return 2; // chất lượng cao
+if(/compact|low|lite/.test(u))return 0;                          // chất lượng thấp
+return 1;                                                        // trung bình
+}
+function goodVoices(){
+const all=speechSynthesis.getVoices().filter(function(v){return v.lang&&v.lang.toLowerCase().indexOf("en")===0;});
+let vs=all.filter(function(v){return !BAD_VOICES.test(v.name||"");});      // bỏ giọng đồ chơi
+const hi=vs.filter(function(v){return vQual(v)>0;});                        // bỏ giọng nén chất lượng thấp
+if(hi.length)vs=hi;
+return vs.length?vs:all;                                                    // luôn còn ít nhất 1 giọng để đọc
+}
 function pickVoice(){
 try{
-const vs=speechSynthesis.getVoices().filter(function(v){return v.lang&&v.lang.toLowerCase().indexOf("en")===0;});
-if(!vs.length)return null;
+const all=speechSynthesis.getVoices().filter(function(v){return v.lang&&v.lang.toLowerCase().indexOf("en")===0;});
+if(!all.length)return null;
+const list=goodVoices();
 const pref=LS.get("ta_voice","");
-if(pref){for(let i=0;i<vs.length;i++)if(vs[i].name===pref)return vs[i];}
+if(pref&&!BAD_VOICES.test(pref)){for(let i=0;i<list.length;i++)if(list[i].name===pref)return list[i];}
 function sc(v){
-let s=0;const n=(v.name||"").toLowerCase();
-if(/natural|neural|premium|enhanced/.test(n))s+=8;
-if(n.indexOf("google")>=0)s+=6;
-if(/samantha|karen|daniel|moira|tessa|serena|ava|allison/.test(n))s+=5;
+let s=vQual(v)*14; // chất lượng giọng là tiêu chí nặng nhất
+const n=(v.name||"").toLowerCase();
+if(n.indexOf("google")>=0)s+=9;
+if(GOOD_VOICES.test(n))s+=7;
 if(v.lang.toLowerCase()==="en-us")s+=3;
+if(v.default)s+=2;
 if(!v.localService)s+=1;
 return s;
 }
-vs.sort(function(a,b){return sc(b)-sc(a);});
-return vs[0];
+list.sort(function(a,b){return sc(b)-sc(a);});
+return list[0];
 }catch(e){return null;}
 }
 function _speakNow(t,slow,retry){
@@ -833,11 +853,13 @@ h+='</div>'
 document.getElementById("pg3").innerHTML=h;
 }
 function voiceOpts(){
-const cur=LS.get("ta_voice","");
+let cur=LS.get("ta_voice","");
+if(cur&&BAD_VOICES.test(cur)){cur="";LS.set("ta_voice","");} // bỏ lựa chọn cũ nếu lỡ là giọng đồ chơi
 let vs=[];
-try{vs=speechSynthesis.getVoices().filter(function(v){return v.lang&&v.lang.toLowerCase().indexOf("en")===0;});}catch(e){}
-let h='<option value="">(Tự động — chọn giọng tốt nhất)</option>';
-vs.forEach(function(v){h+='<option value="'+esc(v.name)+'"'+(cur===v.name?' selected':'')+'>'+esc(v.name+" — "+v.lang)+'</option>';});
+try{vs=goodVoices();}catch(e){}
+const best=pickVoice();
+let h='<option value="">(Tự động - đang dùng: '+esc(best?best.name:"giọng mặc định")+')</option>';
+vs.forEach(function(v){h+='<option value="'+esc(v.name)+'"'+(cur===v.name?' selected':'')+'>'+esc(v.name+" - "+v.lang+(vQual(v)>1?" ★":""))+'</option>';});
 return h;
 }
 function makeReport(){
