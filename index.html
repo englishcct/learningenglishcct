@@ -232,30 +232,44 @@ let S=[
 {e:"Believe in yourself!",p:"/bɪˈliːv ɪn jərˈself/",v:"Hãy tin vào chính mình!",u:"believe in = tin tưởng vào. Câu động viên sự tự tin.",x:"You can do it. Believe in yourself!"}
 ];
 // ================= LÕI ỨNG DỤNG =================
-const DEFAULT_S=S;              // giữ bản gốc bộ 91 câu mặc định
-const DEFAULT_WEEKS=WEEKS.slice();
-const START=new Date(2026,6,20); // 20/7/2026
 const DAY=86400000;
-function todayIdx(){const n=new Date();const t=new Date(n.getFullYear(),n.getMonth(),n.getDate());return Math.floor((t-START)/DAY);}
-// ===== Tuần linh hoạt: mỗi tuần = 1 tình huống (4-7 câu), mốc tuần lấy từ cột "Chu de tuan" =====
-let WKSTART=[]; // chỉ số câu đầu của từng tuần
-function rebuildWeeksDefault(){WKSTART=[];for(let i=0;i<S.length;i+=7)WKSTART.push(i);}
-function wkCount(){return WKSTART.length;}
-function wkSize(w){return (w+1<WKSTART.length?WKSTART[w+1]:S.length)-WKSTART[w];}
-function calWeek(){const i=todayIdx();return i<0?0:Math.floor(i/7);} // tuần lịch từ 20/7/2026
-function unlockedCount(){
-const i=todayIdx();
-if(!WKSTART.length)rebuildWeeksDefault();
-if(i<0)return Math.min(S.length,wkSize(0)); // trước 20/7: xem trước tuần 1
-const w=Math.floor(i/7);
-if(w>=wkCount())return S.length;
-return Math.min(S.length,WKSTART[w]+Math.min(i%7+1,wkSize(w)));
+// ===== HỌC THEO NGÀY: mỗi câu gắn 1 ngày dương lịch do Cục Chính trị ban hành =====
+function dkey(d){return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);}
+function today(){const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate());}
+function todayKey(){return dkey(today());}
+function dLabel(k){const p=String(k||"").split("-");return p.length===3?(p[2]+"/"+p[1]+"/"+p[0]):"";}
+function mondayOf(k){ // ngày thứ Hai của tuần chứa ngày k
+const p=String(k).split("-");const d=new Date(+p[0],+p[1]-1,+p[2]);
+const off=(d.getDay()+6)%7; d.setDate(d.getDate()-off); return dkey(d);
 }
-function targetNow(){ // chỉ tiêu: thuộc hết số câu mở đến hết tuần hiện tại
-if(todayIdx()<0)return 0;
-const w=Math.min(calWeek(),wkCount()-1);
-return w+1<wkCount()?WKSTART[w+1]:S.length;
+// WK[i] = {key: ngày thứ Hai, label: chủ đề tuần, idx: [chỉ số câu], vid: link video}
+let WK=[];
+function buildWeeks(){
+WK=[];const map={};
+S.forEach(function(s,i){
+if(!s.d)return;
+const mk=mondayOf(s.d);
+if(!map[mk]){map[mk]={key:mk,label:"",idx:[],vid:""};WK.push(map[mk]);}
+map[mk].idx.push(i);
+if(s.w&&!map[mk].label)map[mk].label=s.w;
+if(s.vid&&!map[mk].vid)map[mk].vid=s.vid;
+});
+WK.sort(function(a,b){return a.key.localeCompare(b.key);});
+WK.forEach(function(w,i){if(!w.label)w.label="Tuần "+(i+1);});
 }
+function wkCount(){return WK.length;}
+function wkOfToday(){ // tuần đang học: tuần chứa hôm nay, chưa tới thì tuần đầu, qua rồi thì tuần cuối
+if(!WK.length)return -1;
+const mk=mondayOf(todayKey());
+for(let i=0;i<WK.length;i++)if(WK[i].key===mk)return i;
+if(mk<WK[0].key)return 0;
+for(let i=WK.length-1;i>=0;i--)if(WK[i].key<mk)return i;
+return 0;
+}
+function isOpen(i){return S[i]&&S[i].d&&S[i].d<=todayKey();}     // câu đã đến ngày học
+function unlockedCount(){let n=0;for(let i=0;i<S.length;i++)if(isOpen(i))n++;return n;}
+function idxOfToday(){const t=todayKey();for(let i=0;i<S.length;i++)if(S[i].d===t)return i;return -1;}
+function targetNow(){return unlockedCount();}                     // chỉ tiêu: thuộc hết câu đã ban hành
 const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
 let learned=new Set(LS.get("ta_learned",[]));
 function saveLearned(){LS.set("ta_learned",[...learned]);}
@@ -304,47 +318,34 @@ async function trySync(){
 const p=profile();
 if(!p||!apiReady()||!LS.get("ta_dirty",0))return;
 const hist=LS.get("ta_quiz",[]);const lq=hist.length?hist[hist.length-1]:null;
-try{const res=await api({action:"submit",name:p.name,role:p.role,dev:devId(),learned:learned.size,quiz:lq?(lq.s+"/"+lq.t):"",day:todayIdx()+1,list:[...learned].sort(function(a,b){return a-b;}).join("-")});
+try{const res=await api({action:"submit",name:p.name,role:p.role,dev:devId(),learned:learned.size,quiz:lq?(lq.s+"/"+lq.t):"",day:unlockedCount(),list:[...learned].sort(function(a,b){return a-b;}).join("-")});
 if(res.ok)LS.set("ta_dirty",0);}catch(e){/* mất mạng: giữ lại, tự gửi bù lần sau */}
 }
-// ---- Ngân hàng câu dùng chung (do Bảo tàng QK xây dựng, dán vào trang NganHang trên Sheet) ----
-let WEEKDLG=[]; // tình huống thực hành theo tuần lịch (cột G trang NganHang) - độc lập với số câu
-let WEEKVID=[]; // link video bài học tuần (cột H trang NganHang)
+// ---- Nội dung học do Cục Chính trị ban hành hằng tuần (trang NganHang: mỗi dòng 1 ngày) ----
+let DLGS=[]; // hội thoại tình huống bổ trợ (trang HoiThoai) - người học tự chọn ở tab Luyện tập
 function applyBank(){
 const b=LS.get("ta_bank",null);
-if(b&&b.length>=7){
-S=b.map(function(r){return{e:r.e,p:r.p,v:r.v,u:r.u,x:r.x};});
-WEEKS=[];WKSTART=[];
-b.forEach(function(r,i){
-if(i===0||String(r.w||"").trim()){WKSTART.push(i);WEEKS.push((r.w&&String(r.w).trim())||("Tuần "+WKSTART.length));}
-});
-if(WKSTART.length<=1){WEEKS=[];WKSTART=[];for(let i=0;i<S.length;i+=7){WKSTART.push(i);WEEKS.push("Tuần "+(i/7+1));}}
-}else{rebuildWeeksDefault();}
-WEEKDLG=LS.get("ta_dlg",[])||[];
-WEEKVID=LS.get("ta_vids",[])||[];
+if(b&&b.length){
+S=b.map(function(r){return{d:r.d||"",e:r.e,p:r.p||"",v:r.v||"",w:r.w||"",vid:r.vid||""};});
 }
-function speakDlg(w){
-const t=(WEEKDLG[w]||"").split("\n").map(function(l){return l.trim();}).filter(function(l){return /^[ABC]:/.test(l);}).map(function(l){return l.replace(/^[ABC]:\s*/,"");}).join(" ... ");
+buildWeeks();
+DLGS=LS.get("ta_dlg",[])||[];
+}
+function speakDlg(i){
+const c=(DLGS[i]||{}).c||"";
+const t=c.split("\n").map(function(l){return l.trim();}).filter(function(l){return /^[ABC]:/.test(l);}).map(function(l){return l.replace(/^[ABC]:\s*/,"");}).join(" ... ");
 if(t)speak(t);
 }
 async function fetchBank(force){
 if(!apiReady())return;
-if(LS.get("ta_vids",null)===null)force=true; // máy chưa từng nhận dữ liệu video -> tải ngay, không chờ chu kỳ
-if(!force&&Date.now()-LS.get("ta_bank_t",0)<6*3600*1000)return; // chỉ kiểm tra 6 giờ/lần
+const cache=LS.get("ta_bank",null);
+if(!cache||!cache.length||!cache[0].d)force=true; // chưa có dữ liệu theo ngày -> tải ngay
+if(!force&&Date.now()-LS.get("ta_bank_t",0)<3*3600*1000)return; // kiểm tra 3 giờ/lần
 try{
 const r=await fetch(API_URL+"?u="+encodeURIComponent(UNIT_CODE)+"&action=bank");
 const j=await r.json();
-if(j.ok&&j.bank&&j.bank.length>=7){LS.set("ta_bank",j.bank);if(j.dlg)LS.set("ta_dlg",j.dlg);if(j.vids)LS.set("ta_vids",j.vids);LS.set("ta_bank_t",Date.now());applyBank();renderToday();}
-else if(j.ok){LS.set("ta_bank_t",Date.now());seedDefaultBank();} // trang NganHang còn trống: dùng bộ câu mặc định
-}catch(e){}
-}
-// Gửi bộ 91 câu mặc định lên Sheet -> máy chủ tạo trang "NganHangMacDinh" (chỉ 1 lần)
-async function seedDefaultBank(){
-if(LS.get("ta_seeded",0))return;
-try{
-const rows=DEFAULT_S.map(function(s,i){return{e:s.e,p:s.p,v:s.v,u:s.u,x:s.x,w:(i%7===0?DEFAULT_WEEKS[i/7]||"":"")};});
-const res=await api({action:"seedbank",rows:rows});
-if(res.ok)LS.set("ta_seeded",1);
+if(j.ok&&j.bank&&j.bank.length){LS.set("ta_bank",j.bank);if(j.dlg)LS.set("ta_dlg",j.dlg);LS.set("ta_bank_t",Date.now());applyBank();renderToday();}
+else if(j.ok){LS.set("ta_bank_t",Date.now());}
 }catch(e){}
 }
 // Mỗi lần mở app: đối chiếu mật danh đã lưu với bảng DangKy trên máy chủ.
@@ -389,7 +390,7 @@ b.innerHTML='<div class="card"><h2>👥 Theo dõi toàn cơ quan</h2><div class=
 let rows=[];
 try{const r=await fetch(API_URL+"?u="+encodeURIComponent(UNIT_CODE)+"&action=fetch&n="+encodeURIComponent((profile()||{}).name||""));const j=await r.json();if(!j.ok)throw 0;rows=j.rows||[];}
 catch(e){b.innerHTML='<div class="card"><h2>👥 Theo dõi toàn cơ quan</h2><div class="note">⚠ Không tải được dữ liệu. Kiểm tra mạng hoặc link máy chủ.</div><div class="btnrow"><button class="btn btn-g" onclick="renderAdmin()">🔄 Thử lại</button></div></div>';return;}
-const idx=todayIdx();const target=targetNow();
+const target=targetNow();
 rows.sort((a,b2)=>(b2.l||0)-(a.l||0));
 const dat=rows.filter(r=>(r.l||0)>=target).length;
 const myName=(profile()||{}).name||"";
@@ -526,28 +527,29 @@ return AUDIO_DIR+h+".mp3";
 }
 let _player=null;
 const _audioMiss={}; // nhớ câu nào không có file để lần sau khỏi thử lại
-function speak(t,slow){
+function speak(t,slow,onEnd){
 try{
 if(_player){try{_player.pause();}catch(e){}_player=null;}
 try{if(typeof speechSynthesis!=="undefined")speechSynthesis.cancel();}catch(e){}
 const key=String(t).trim().toLowerCase();
-if(!_audioMiss[key]){ // thử phát file giọng neural sinh sẵn
+if(!_audioMiss[key]){ // phát file giọng neural sinh sẵn
 const a=new Audio(audioFile(t));
 a.playbackRate=slow?0.7:1;
-a.onerror=function(){_audioMiss[key]=1;_speakFallback(t,slow);};
-const p=a.play();
-if(p&&p.catch)p.catch(function(){_audioMiss[key]=1;_speakFallback(t,slow);});
+a.onended=function(){if(onEnd)onEnd();};
+a.onerror=function(){_audioMiss[key]=1;_speakFallback(t,slow,onEnd);};
+const pr=a.play();
+if(pr&&pr.catch)pr.catch(function(){_audioMiss[key]=1;_speakFallback(t,slow,onEnd);});
 _player=a;return;
 }
-_speakFallback(t,slow);
-}catch(e){_speakFallback(t,slow);}
+_speakFallback(t,slow,onEnd);
+}catch(e){_speakFallback(t,slow,onEnd);}
 }
-function _speakFallback(t,slow){ // giọng có sẵn trong máy
+function _speakFallback(t,slow,onEnd){ // giọng có sẵn trong máy
 try{
-if(typeof speechSynthesis==="undefined"){toast("⚠ Trình duyệt này không phát âm được — hãy mở bằng Chrome/Safari.");return;}
+if(typeof speechSynthesis==="undefined"){toast("⚠ Trình duyệt này không phát âm được — hãy mở bằng Chrome/Safari.");if(onEnd)onEnd();return;}
 speechSynthesis.cancel();
-setTimeout(function(){_speakNow(t,slow,1);},120);
-}catch(e){}
+setTimeout(function(){_speakNow(t,slow,1,onEnd);},120);
+}catch(e){if(onEnd)onEnd();}
 }
 // Chấm điểm chọn giọng đọc tự nhiên nhất có trên máy (ưu tiên Natural/Neural/Enhanced/Google...)
 // Giọng "đồ chơi"/hiệu ứng của Apple - TUYỆT ĐỐI không dùng để đọc bài
@@ -589,7 +591,7 @@ list.sort(function(a,b){return sc(b)-sc(a);});
 return list[0];
 }catch(e){return null;}
 }
-function _speakNow(t,slow,retry){
+function _speakNow(t,slow,retry,onEnd){
 try{
 const u=new SpeechSynthesisUtterance(t);
 u.lang="en-US";u.rate=slow?0.6:0.95;u.volume=1; // 0.95: tốc độ tự nhiên hơn
@@ -597,10 +599,11 @@ const pv=pickVoice();
 if(pv)u.voice=pv;
 let started=false;
 u.onstart=function(){started=true;};
+u.onend=function(){if(onEnd)onEnd();};
 try{speechSynthesis.resume();}catch(e){}
 speechSynthesis.speak(u);
 setTimeout(function(){ // iOS/Android đôi khi im lặng: chưa lên tiếng sau 0,9s thì phát lại 1 lần
-if(!started&&retry>0){try{speechSynthesis.cancel();speechSynthesis.resume();}catch(e){}_speakNow(t,slow,retry-1);}
+if(!started&&retry>0){try{speechSynthesis.cancel();speechSynthesis.resume();}catch(e){}_speakNow(t,slow,retry-1,onEnd);}
 },900);
 }catch(e){}
 }
@@ -708,15 +711,15 @@ r.start();
 }
 // ===== Hội thoại trực tiếp với máy (tình huống tuần) =====
 let DLG=null;
-function parseDlg(w){
-const t=WEEKDLG[w]||"";const out=[];
-t.split("\n").forEach(function(l){const m=l.trim().match(/^([ABC]):\s*(.+)$/);if(m)out.push({r:m[1],e:m[2].trim()});});
+function parseDlg(i){
+const c=(DLGS[i]||{}).c||"";const out=[];
+c.split("\n").forEach(function(l){const m=l.trim().match(/^([ABC]):\s*(.+)$/);if(m)out.push({r:m[1],e:m[2].trim()});});
 return out;
 }
-function curDlgWeek(){const idx=todayIdx();return Math.min(Math.max(0,Math.floor((idx<0?0:idx)/7)),Math.max(0,WEEKDLG.length-1));}
 function startDlg(role){
-const lines=parseDlg(curDlgWeek());
-if(lines.length<2)return;
+const sel=+LS.get("ta_dlgsel",0);
+const lines=parseDlg(sel);
+if(lines.length<2){toast("⚠ Tình huống này chưa có nội dung hội thoại.");return;}
 DLG={lines:lines,role:role,pos:0,log:[]};
 dlgStep();
 }
@@ -726,8 +729,19 @@ const buf=[];
 while(DLG.pos<DLG.lines.length&&DLG.lines[DLG.pos].r!==DLG.role){
 const l=DLG.lines[DLG.pos];DLG.log.push({r:l.r,t:l.e,me:false});buf.push(l.e);DLG.pos++;
 }
-if(buf.length)speak(buf.join(" ... "));
+if(buf.length)speakSeq(buf); // đọc lần lượt từng câu để dùng đúng file giọng neural của câu đó
 renderDlg();
+}
+// Đọc nhiều câu nối tiếp nhau (mỗi câu dùng file giọng neural riêng, hết câu này mới sang câu kia)
+let _seqStop=0;
+function speakSeq(list){
+_seqStop++;const myRun=_seqStop;let k=0;
+function next(){
+if(myRun!==_seqStop||k>=list.length)return;
+const t=list[k++];
+speak(t,false,function(){setTimeout(next,250);});
+}
+next();
 }
 function renderDlg(){
 const b=document.getElementById("dlgbox");if(!b||!DLG)return;
@@ -783,68 +797,69 @@ function go(i){document.querySelectorAll(".page").forEach((p,j)=>p.classList.tog
 function toggleLearned(i){if(learned.has(i))learned.delete(i);else learned.add(i);saveLearned();scheduleSync();const p=document.querySelector(".page.show").id;if(p==="pg0")renderToday();if(p==="pg1")renderBank();if(p==="pg3")renderProgress();}
 // ---------- Tab Hôm nay ----------
 function renderToday(){
-const idx=todayIdx();
-if(!WKSTART.length)rebuildWeeksDefault();
-const wk=Math.min(Math.max(0,Math.floor((idx<0?0:idx)/7)),wkCount()-1);
-const size=wkSize(wk),dw=idx<0?0:idx%7;
-const done=idx>=0&&Math.floor(idx/7)>=wkCount();
-const inRev=!done&&idx>=0&&dw>=size;
-const cur=done?S.length-1:WKSTART[wk]+Math.min(dw,size-1);
-const s=S[cur];
 let h="";
-if(idx<0){const d=Math.ceil((START-new Date())/DAY);h+='<div class="countdown">⏳ Phong trào bắt đầu ngày <b>20/7/2026</b> (còn '+d+' ngày). Dưới đây là câu số 1 để làm quen trước.</div>';}
-else if(done){h+='<div class="countdown">🎉 Đã hoàn thành toàn bộ '+S.length+' câu của '+wkCount()+' tuần! Hãy ôn tập ở mục Luyện tập.</div>';}
-else if(inRev){h+='<div class="countdown">📖 Hôm nay là ngày ôn tập: đã học đủ '+size+' câu của tuần — ôn lại các câu và thực hành tình huống bên dưới.</div>';}
-h+='<div class="card"><span class="daytag">CÂU '+(cur+1)+'/'+S.length+'</span><span class="wktag">'+(WEEKS[wk]||"Tuần "+(wk+1))+'</span>'
-+'<div class="en">'+esc(s.e)+'</div><div class="ipa">'+esc(s.p)+'</div><div class="vi">📖 '+esc(s.v)+'</div>'
-+(s.u?'<div class="use">💡 <b>Cách dùng:</b> '+esc(s.u)+'</div>':'')
-+(s.x?'<div class="ex">🗣 '+esc(s.x)+'</div>':'')
+if(!S.length||!S[0].d){
+document.getElementById("pg0").innerHTML='<div class="card"><h2>⏳ Chưa có nội dung học</h2><div class="note">Hệ thống chưa nhận được nội dung do Cục Chính trị ban hành. Hãy kiểm tra lại khi có mạng, hoặc liên hệ đồng chí quản trị viên.</div></div>';
+return;
+}
+const tk=todayKey();
+const wk=wkOfToday();
+const W=WK[wk]||{idx:[],label:"",vid:""};
+let cur=idxOfToday();
+const chuaToi=cur<0&&tk<S[0].d;          // phong trào chưa bắt đầu
+const nghi=cur<0&&!chuaToi;              // hôm nay Cục không ban hành câu (ngày trống)
+if(cur<0){ // không có câu đúng hôm nay -> lấy câu gần nhất đã mở để ôn
+for(let i=S.length-1;i>=0;i--){if(S[i].d&&S[i].d<=tk){cur=i;break;}}
+if(cur<0)cur=0;
+}
+const s=S[cur];
+if(chuaToi){h+='<div class="countdown">⏳ Nội dung bắt đầu từ ngày <b>'+dLabel(S[0].d)+'</b>. Dưới đây là câu đầu tiên để làm quen trước.</div>';}
+else if(nghi){h+='<div class="countdown">📖 Hôm nay chưa có câu mới. Ôn lại câu gần nhất và các câu trong tuần bên dưới.</div>';}
+h+='<div class="card"><span class="daytag">'+(chuaToi||nghi?"CÂU GẦN NHẤT":"HÔM NAY "+dLabel(tk))+'</span><span class="wktag">'+esc(W.label||"")+'</span>'
++'<div class="en">'+esc(s.e)+'</div>'+(s.p?'<div class="ipa">'+esc(s.p)+'</div>':'')
++'<div class="vi">📖 '+esc(s.v)+'</div>'
 +(learned.has(cur)?'<div class="note" style="color:#1d7a3e;font-weight:700;margin-top:8px">✓ Câu này đã được máy xác nhận thuộc</div>':'')
 +'<div class="btnrow1"><button class="btn btn-g" onclick="speak(S['+cur+'].e)">🔊 Nghe</button>'
 +'<button class="btn btn-o" onclick="speak(S['+cur+'].e,true)">🐢 Nghe chậm</button>'
 +'<button class="btn btn-gold" onclick="speakTest('+cur+')">🎤 Nói thử — máy chấm</button></div>'
 +'<div class="note" id="saybox" style="min-height:16px;margin-top:6px"></div></div>';
-// tình huống thực hành theo tuần lịch (chạy đủ 52 tuần, không phụ thuộc số câu)
-const wkCal=Math.min(Math.max(0,Math.floor((idx<0?0:idx)/7)),WEEKDLG.length-1);
-if(WEEKDLG.length&&WEEKDLG[wkCal]){
-h+='<div class="card"><h2>🎭 Tình huống thực hành tuần này</h2><div class="ex" style="margin-top:6px">'+esc(WEEKDLG[wkCal])+'</div>'
-+'<div class="btnrow"><button class="btn btn-o" onclick="speakDlg('+wkCal+')">🔊 Nghe hội thoại</button></div>'
-+'<div class="note">Luyện theo cặp: đọc chậm từng câu, đổi vai A/B, thực hành không nhìn tài liệu.</div></div>';
+// video bài học của tuần (cột "Video tuan", điền ở dòng đầu tuần)
+if(W.vid){
+h+='<div class="card"><h2>🎬 Video bài học tuần '+(wk+1)+' của Cục Chính trị</h2>'
++'<video controls playsinline preload="metadata" style="width:100%;border-radius:12px;background:#000;margin-top:6px" src="'+esc(String(W.vid))+'"></video>'
++'<div class="note">Xem video trước, sau đó luyện nói từng câu bên dưới.</div></div>';
 }
-// video bài học của tuần (nếu quản trị viên đã gắn link ở cột H trang NganHang)
-const vurl=(WEEKVID||[])[wkCal];
-if(vurl){
-h+='<div class="card"><h2>🎬 Video bài học tuần '+(wkCal+1)+' của Cục Chính trị</h2>'
-+'<video controls playsinline preload="metadata" style="width:100%;border-radius:12px;background:#000;margin-top:6px" src="'+esc(String(vurl))+'"></video>'
-+'<div class="note">Xem video trước, sau đó luyện nói từng câu bên trên.</div></div>';
-}
-// các câu trong tuần hiện tại
+// các câu trong tuần (chỉ hiện câu đã đến ngày)
 h+='<div class="card"><h2>📌 Các câu trong tuần (ôn lại "10 phút tiếng Anh")</h2>';
-const st=WKSTART[wk],en=Math.min(st+size,unlockedCount());
-for(let i=st;i<en;i++){h+=rowHTML(i);}
+let dem=0;
+W.idx.forEach(function(i){if(isOpen(i)){h+=rowHTML(i);dem++;}});
+if(!dem)h+='<div class="note">Chưa có câu nào của tuần này được mở.</div>';
 h+='</div>';
 document.getElementById("pg0").innerHTML=h;
 }
-function rowHTML(i){const s=S[i];return '<div class="srow"><span class="num">'+(i+1)+'</span><div class="txt"><div class="e">'+esc(s.e)+'</div><div class="m">'+esc(s.p)+' — '+esc(s.v)+'</div></div><div class="acts"><button class="mini" onclick="speak(S['+i+'].e)">🔊</button><button class="mini" onclick="speakRow('+i+')">🎤</button><span class="mini '+(learned.has(i)?"on":"")+'" style="cursor:default;display:flex;align-items:center;justify-content:center">'+(learned.has(i)?"✓":"")+'</span></div></div>';}
+function rowHTML(i){const s=S[i];return '<div class="srow"><span class="num" style="font-size:9.5px;min-width:36px;border-radius:9px">'+esc(dLabel(s.d).slice(0,5))+'</span><div class="txt"><div class="e">'+esc(s.e)+'</div><div class="m">'+(s.p?esc(s.p)+' - ':'')+esc(s.v)+'</div></div><div class="acts"><button class="mini" onclick="speak(S['+i+'].e)">🔊</button><button class="mini" onclick="speakRow('+i+')">🎤</button><span class="mini '+(learned.has(i)?"on":"")+'" style="cursor:default;display:flex;align-items:center;justify-content:center">'+(learned.has(i)?"✓":"")+'</span></div></div>';}
 // ---------- Tab Ngân hàng ----------
 let openWk=new Set([0]);
 function renderBank(){
 const q=(document.getElementById("bankq")||{}).value||"";
 let h='<input type="search" id="bankq" placeholder="🔍 Tìm câu tiếng Anh hoặc nghĩa tiếng Việt..." value="'+esc(q)+'" oninput="renderBank();this.focus();this.setSelectionRange(this.value.length,this.value.length)">';
-const un=unlockedCount();
 if(q.trim()){
 h+='<div class="card">';let found=0;
-S.forEach((s,i)=>{if(i<un&&(s.e.toLowerCase().includes(q.toLowerCase())||s.v.toLowerCase().includes(q.toLowerCase()))){h+=rowHTML(i);found++;}});
+S.forEach(function(s2,i2){if(isOpen(i2)&&(s2.e.toLowerCase().includes(q.toLowerCase())||String(s2.v).toLowerCase().includes(q.toLowerCase()))){h+=rowHTML(i2);found++;}});
 if(!found)h+='<div class="note">Không tìm thấy câu phù hợp (chỉ tìm trong các câu đã mở).</div>';
 h+='</div>';
 }else{
-if(!WKSTART.length)rebuildWeeksDefault();
-for(let w=0;w<wkCount();w++){
-const st=WKSTART[w],sz=wkSize(w),locked=st>=un;
-h+='<div class="wkhead'+(locked?" lock":"")+'" onclick="tw('+w+')"><span>'+WEEKS[w]+(locked?" 🔒":"")+'</span><span>'+(openWk.has(w)?"▲":"▼")+'</span></div>';
+if(!WK.length)h+='<div class="card"><div class="note">Chưa có nội dung.</div></div>';
+for(let w=WK.length-1;w>=0;w--){ // tuần mới nhất lên đầu
+const W=WK[w],mo=W.idx.filter(isOpen);
+const locked=mo.length===0;
+h+='<div class="wkhead'+(locked?" lock":"")+'" onclick="tw('+w+')"><span>'+esc(W.label)+(locked?" 🔒":"")+'</span><span>'+(openWk.has(w)?"▲":"▼")+'</span></div>';
 h+='<div class="wkbody'+(openWk.has(w)?" open":"")+'"><div class="card" style="margin-top:6px">';
-if(locked){h+='<div class="note">Tuần này chưa mở. Mỗi ngày mở 1 câu mới theo kế hoạch (từ 20/7/2026).</div>';}
-else{for(let i=st;i<st+sz;i++){if(i<un)h+=rowHTML(i);else h+='<div class="srow lock"><span class="num">'+(i+1)+'</span><div class="txt"><div class="e">🔒 Câu số '+(i+1)+'</div><div class="m">Sẽ mở vào đúng ngày theo kế hoạch</div></div></div>';}}
+if(locked){h+='<div class="note">Tuần này chưa đến ngày học.</div>';}
+else{W.idx.forEach(function(i2){
+if(isOpen(i2))h+=rowHTML(i2);
+else h+='<div class="srow lock"><span class="num" style="font-size:9.5px;min-width:36px;border-radius:9px">'+esc(dLabel(S[i2].d).slice(0,5))+'</span><div class="txt"><div class="e">🔒 Chưa đến ngày</div><div class="m">Sẽ mở vào ngày '+esc(dLabel(S[i2].d))+'</div></div></div>';
+});}
 h+='</div></div>';}
 }
 document.getElementById("pg1").innerHTML=h;
@@ -854,8 +869,12 @@ function tw(w){if(openWk.has(w))openWk.delete(w);else openWk.add(w);renderBank()
 let fcOrder=[],fcPos=0,fcFront=true,quiz=null;
 function renderPractice(){
 let h="";
-if(parseDlg(curDlgWeek()).length>=2){
-h+='<div class="card"><h2>🗣 Hội thoại với máy — tình huống tuần</h2><div class="note">Chọn vai của bạn, máy đóng vai còn lại và hai bên nói chuyện với nhau. Máy nghe không rõ sẽ đề nghị bạn nhắc lại bằng tiếng Anh.</div>'
+if(DLGS.length){
+const cur=LS.get("ta_dlgsel",0);
+h+='<div class="card"><h2>🗣 Hội thoại với máy (bài bổ trợ)</h2><div class="note">Chọn tình huống, chọn vai của bạn — máy đóng vai còn lại và hai bên nói chuyện. Máy nghe không rõ sẽ đề nghị bạn nhắc lại bằng tiếng Anh.</div>'
++'<select id="dlgsel" style="width:100%;padding:10px;border:1px solid #d5ddd0;border-radius:10px;font-size:16px;margin:8px 0" onchange="LS.set(\'ta_dlgsel\',+this.value);DLG=null;renderPractice()">';
+DLGS.forEach(function(d,i2){h+='<option value="'+i2+'"'+(+cur===i2?' selected':'')+'>'+esc(d.t)+'</option>';});
+h+='</select>'
 +'<div class="btnrow1"><button class="btn btn-g" onclick="startDlg(\'A\')">Tôi đóng vai A</button><button class="btn btn-gold" onclick="startDlg(\'B\')">Tôi đóng vai B</button></div>'
 +'<div id="dlgbox" style="margin-top:8px"></div></div>';
 }
@@ -900,12 +919,13 @@ setTimeout(()=>{quiz.cur++;if(quiz.cur>=quiz.qs.length){quiz.done=true;const his
 }
 // ---------- Tab Tiến độ ----------
 function renderProgress(){
-const prof=profile()||{name:"(chưa đăng ký)",role:"troly"};const un=unlockedCount();const nl=learned.size;const idx=todayIdx();
-const week=idx<0?0:Math.min(wkCount(),Math.floor(idx/7)+1);
+const prof=profile()||{name:"(chưa đăng nhập)",role:"troly"};
+const un=unlockedCount();const nl=learned.size;const target=targetNow();
+const wk=wkOfToday();const W=WK[wk]||{idx:[],label:""};
+const trongTuan=W.idx.filter(isOpen);
+const thuocTuan=trongTuan.filter(function(i){return learned.has(i);}).length;
 const hist=LS.get("ta_quiz",[]);const last3=hist.slice(-3).reverse();
-const target=targetNow();
-const t13=wkCount()>13?WKSTART[13]:S.length; // số câu theo lộ trình 13 tuần đầu (3 tháng)
-const pct=Math.round(nl/S.length*100);
+const pct=un?Math.round(nl/un*100):0;
 let h='<div class="card"><h2>👤 Thông tin cá nhân</h2>'
 +'<div class="stat"><span>Mật danh</span><b>'+esc(prof.name)+'</b></div>'
 +(prof.hn?'<div class="stat"><span>Họ và tên</span><b>'+esc(prof.hn)+'</b></div>':'')
@@ -913,18 +933,16 @@ let h='<div class="card"><h2>👤 Thông tin cá nhân</h2>'
 +'<div class="stat"><span>Đồng bộ về cơ quan</span><b>'+(apiReady()?(LS.get("ta_dirty",0)?"⏳ Chờ gửi (thiếu mạng)":"✅ Đã gửi"):"Chưa cấu hình máy chủ")+'</b></div>'
 +'<div class="btnrow1" style="margin-top:10px"><button class="btn" style="background:#fdecea;color:#c0392b;border:1px solid #f2c4bd" onclick="resetProfile()">↩️ Đăng xuất khỏi máy này</button></div></div>'
 +'<div class="card"><h2>📊 Kết quả học tập</h2>'
-+'<div class="stat"><span>Câu đã thuộc</span><b>'+nl+' / '+S.length+' câu ('+pct+'%)</b></div><div class="bar"><i style="width:'+pct+'%"></i></div>'
-+'<div class="stat"><span>Tiến độ phong trào</span><b>'+(idx<0?"Chưa bắt đầu (20/7/2026)":Math.floor(idx/7)>=wkCount()?"Đã hoàn thành "+wkCount()+" tuần":"Ngày "+(idx+1)+" · Tuần "+week)+'</b></div>'
-+'<div class="stat"><span>Chỉ tiêu đến hết tuần này (theo tình huống)</span><b>'+target+' câu → '+(nl>=target?"✅ Đạt":"⚠ Cần cố gắng")+'</b></div>'
-+'<div class="stat"><span>Lộ trình 13 tuần đầu (3 tháng)</span><b>'+t13+' câu → '+(nl>=t13?"✅ Đạt":"đã thuộc "+nl+"/"+t13)+'</b></div>';
-if(last3.length){h+='<div class="stat"><span>Kiểm tra gần nhất</span><b>'+last3.map(r=>r.s+"/"+r.t+" ("+r.d+")").join(" · ")+'</b></div>';}
++'<div class="stat"><span>Câu đã thuộc</span><b>'+nl+' / '+un+' câu ('+pct+'%)</b></div><div class="bar"><i style="width:'+pct+'%"></i></div>'
++'<div class="stat"><span>Tuần này</span><b>'+esc(W.label||"—")+'</b></div>'
++'<div class="stat"><span>Câu của tuần này</span><b>'+thuocTuan+'/'+trongTuan.length+' câu → '+(trongTuan.length&&thuocTuan>=trongTuan.length?"✅ Đạt":"⚠ Cần cố gắng")+'</b></div>'
++'<div class="stat"><span>Chỉ tiêu lũy kế (toàn bộ câu đã ban hành)</span><b>'+target+' câu → '+(nl>=target?"✅ Đạt":"còn thiếu "+(target-nl))+'</b></div>';
+if(last3.length){h+='<div class="stat"><span>Kiểm tra gần nhất</span><b>'+last3.map(function(r){return r.s+"/"+r.t+" ("+r.d+")";}).join(" · ")+'</b></div>';}
 h+='</div>'
-+'<div class="card"><h2>🔈 Giọng đọc tiếng Anh</h2><div class="note">App tự chọn giọng hay nhất trên máy; muốn đổi thì chọn và bấm nghe thử (giọng có chữ Natural, Enhanced, Google thường tự nhiên nhất).</div>'
++'<div class="card"><h2>🔈 Giọng đọc tiếng Anh</h2><div class="note">Phần mềm ưu tiên phát giọng thu sẵn; nếu câu chưa có file thì dùng giọng của máy — có thể chọn giọng khác bên dưới.</div>'
 +'<select id="voicesel" style="width:100%;padding:10px;border:1px solid #d5ddd0;border-radius:10px;font-size:16px;margin:6px 0" onchange="LS.set(\'ta_voice\',this.value)">'+voiceOpts()+'</select>'
-+'<div class="btnrow1"><button class="btn btn-g" onclick="speak(\'Good morning! Nice to meet you. Have a nice day!\')">🔊 Nghe thử giọng này</button></div>'
-+'<div class="note">Muốn hay hơn nữa: Android cài/cập nhật ứng dụng "Google Text-to-Speech" và tải giọng tiếng Anh; iPhone vào Cài đặt → Trợ năng → Nội dung đọc → Giọng nói → English → tải bản Enhanced, rồi mở lại app.</div></div>'
-+'<div class="card"><h2>📄 Báo cáo kết quả (gửi chỉ huy / Phòng KH-TH)</h2><div class="btnrow" style="margin-top:4px"><button class="btn btn-g" onclick="makeReport()">📝 Tạo báo cáo</button><button class="btn btn-o" onclick="copyReport()">📋 Sao chép</button></div><textarea id="rep" placeholder="Bấm \'Tạo báo cáo\' để tự động tổng hợp kết quả, sau đó sao chép gửi qua Zalo."></textarea>'
-+'</div>';
++'<div class="btnrow1"><button class="btn btn-g" onclick="speak(\'Good morning! Nice to meet you.\')">🔊 Nghe thử giọng này</button></div></div>'
++'<div class="card"><h2>📄 Báo cáo kết quả (gửi chỉ huy)</h2><div class="btnrow1" style="margin-top:4px"><button class="btn btn-g" onclick="makeReport()">📝 Tạo báo cáo</button><button class="btn btn-o" onclick="copyReport()">📋 Sao chép</button></div><textarea id="rep" placeholder="Bấm \'Tạo báo cáo\' để tự động tổng hợp kết quả."></textarea></div>';
 document.getElementById("pg3").innerHTML=h;
 }
 function voiceOpts(){
@@ -938,20 +956,20 @@ vs.forEach(function(v){h+='<option value="'+esc(v.name)+'"'+(cur===v.name?' sele
 return h;
 }
 function makeReport(){
-const prof=profile();const name=prof?((prof.hn?prof.hn+" — ":"")+prof.name+" ("+(ROLES[prof.role]||"")+")"):"(chưa đăng nhập)";const idx=todayIdx();const nl=learned.size;
-const week=idx<0?0:Math.min(wkCount(),Math.floor(idx/7)+1);
+const prof=profile();const name=prof?((prof.hn?prof.hn+" - ":"")+prof.name+" ("+(ROLES[prof.role]||"")+")"):"(chưa đăng nhập)";
+const nl=learned.size,un=unlockedCount(),target=targetNow();
+const wk=wkOfToday();const W=WK[wk]||{idx:[],label:""};
+const trongTuan=W.idx.filter(isOpen);
+const thuocTuan=trongTuan.filter(function(i){return learned.has(i);}).length;
 const hist=LS.get("ta_quiz",[]);const lastQ=hist.length?hist[hist.length-1]:null;
-const target=targetNow();
-const wkList=[];for(let w=0;w<wkCount();w++){const c=[...learned].filter(i=>i>=WKSTART[w]&&i<WKSTART[w]+wkSize(w)).length;if(c>0)wkList.push("Tuần "+(w+1)+": "+c+"/"+wkSize(w)+" câu");}
 const r="BÁO CÁO KẾT QUẢ HỌC TIẾNG ANH\n(Phong trào \"Mỗi ngày học một câu giao tiếp tiếng Anh\" - KH 277/KH-CT)\n"
 +"-----------------------------------\n"
-+"Họ tên: "+name+"\nNgày báo cáo: "+new Date().toLocaleDateString("vi-VN")+"\n"
-+"Tiến độ phong trào: "+(idx<0?"chưa bắt đầu":"tuần "+week+", ngày "+(idx+1))+"\n"
-+"Số câu đã thuộc: "+nl+"/"+S.length+" câu\n"
-+"Chỉ tiêu đến tuần này: "+target+" câu → "+(nl>=target?"ĐẠT":"CHƯA ĐẠT")+"\n"
++"Người báo cáo: "+name+"\nNgày báo cáo: "+dLabel(todayKey())+"\n"
++"Tuần hiện tại: "+(W.label||"-")+"\n"
++"Kết quả tuần này: "+thuocTuan+"/"+trongTuan.length+" câu\n"
++"Lũy kế: "+nl+"/"+un+" câu đã ban hành -> "+(nl>=target?"ĐẠT":"CHƯA ĐẠT")+"\n"
 +(lastQ?("Kiểm tra trắc nghiệm gần nhất: "+lastQ.s+"/"+lastQ.t+" câu đúng ("+lastQ.d+")\n"):"")
-+(wkList.length?("Chi tiết theo tuần: "+wkList.join("; ")+"\n"):"")
-+"-----------------------------------\nNgười báo cáo: "+name;
++"-----------------------------------";
 document.getElementById("rep").value=r;
 }
 function copyReport(){const t=document.getElementById("rep");if(!t.value)makeReport();t.select();try{document.execCommand("copy");alert("Đã sao chép báo cáo. Dán vào Zalo để gửi.");}catch(e){alert("Hãy bôi đen và sao chép thủ công.");}}
