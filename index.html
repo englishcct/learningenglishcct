@@ -525,28 +525,44 @@ const h=md5(String(t).trim().toLowerCase()).substr(0,16);
 if(AUDIO_MAP&&AUDIO_MAP[h])return AUDIO_DIR+AUDIO_MAP[h];
 return AUDIO_DIR+h+".mp3";
 }
-let _player=null;
-const _audioMiss={}; // nhớ câu nào không có file để lần sau khỏi thử lại
+// ===== MỘT phần tử âm thanh duy nhất, mở khóa 1 lần trong cú chạm =====
+// (bắt buộc với iPhone: phần tử Audio tạo mới sẽ bị iOS chặn khi phát ngoài cú chạm,
+//  nên các lượt máy nói sau khi nhận giọng bị rơi về giọng máy -> lúc file lúc giọng máy)
+let _au=null,_auUnlocked=false;
+const _audioMiss={};
+function getAu(){
+if(!_au){_au=new Audio();_au.preload="auto";_au.setAttribute("playsinline","");_au.volume=1;}
+return _au;
+}
+function unlockAudio(){ // gọi từ MỌI nút bấm để mở khóa kênh audio + kênh đọc máy
+try{const a=getAu();
+if(!_auUnlocked){a.muted=true;const p=a.play();if(p&&p.then)p.then(function(){a.pause();a.currentTime=0;a.muted=false;_auUnlocked=true;}).catch(function(){a.muted=false;});else{a.muted=false;_auUnlocked=true;}}
+}catch(e){}
+try{primeTTS();}catch(e){}
+}
 function speak(t,slow,onEnd){
 try{
-if(_player){try{_player.pause();}catch(e){}_player=null;}
+const a=getAu();
+try{a.pause();}catch(e){}
 try{if(typeof speechSynthesis!=="undefined")speechSynthesis.cancel();}catch(e){}
 const key=String(t).trim().toLowerCase();
 const coTrongDanhMuc=!!(AUDIO_MAP&&AUDIO_MAP[md5(key).substr(0,16)]);
-const hong=function(){ // câu có trong danh mục thì chỉ đánh dấu tạm, lần sau vẫn thử lại
+let xong=false;
+const hong=function(){ // lỗi tải/ phát: câu có trong danh mục thì thử lại sau, không loại vĩnh viễn
+if(xong)return;xong=true;
 _audioMiss[key]=(_audioMiss[key]||0)+1;
-if(coTrongDanhMuc&&_audioMiss[key]<3)setTimeout(function(){delete _audioMiss[key];},15000);
+if(coTrongDanhMuc&&_audioMiss[key]<4)setTimeout(function(){delete _audioMiss[key];},10000);
 _speakFallback(t,slow,onEnd);
 };
-if(!_audioMiss[key]||(coTrongDanhMuc&&_audioMiss[key]<3)){ // phát file giọng neural sinh sẵn
-const a=new Audio(audioFile(t));
-a.playbackRate=slow?0.7:1;
-a.volume=1;
-a.onended=function(){if(onEnd)onEnd();};
+if(!_audioMiss[key]||(coTrongDanhMuc&&_audioMiss[key]<4)){ // phát file giọng neural qua phần tử đã mở khóa
+a.onended=function(){if(xong)return;xong=true;if(onEnd)onEnd();};
 a.onerror=hong;
+a.muted=false;a.volume=1;a.playbackRate=slow?0.75:1;
+a.src=audioFile(t);
+try{a.load();}catch(e){}
 const pr=a.play();
 if(pr&&pr.catch)pr.catch(hong);
-_player=a;return;
+return;
 }
 _speakFallback(t,slow,onEnd);
 }catch(e){_speakFallback(t,slow,onEnd);}
@@ -651,7 +667,7 @@ if(!box)return;
 if(!canRecog()){box.innerHTML='<span style="color:#c0392b">⚠ Trình duyệt này không hỗ trợ nhận dạng giọng nói. Hãy mở bằng Chrome (Android) hoặc Safari (iPhone) bản mới để luyện nói — chỉ có nói đạt mới được tính thuộc.</span>';return;}
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 try{
-primeTTS(); // mở khóa kênh đọc (iPhone)
+unlockAudio(); // mở khóa audio + kênh đọc (iPhone)
 const r=new SR();r.lang="en-US";r.interimResults=false;r.maxAlternatives=3;
 box.innerHTML='🎙 Đang nghe... hãy đọc to, rõ câu tiếng Anh';
 r.onresult=function(ev){
@@ -691,7 +707,7 @@ t.innerHTML=msg;clearTimeout(t._h);t._h=setTimeout(function(){if(t.parentNode)t.
 // Luyện nói 1 câu bất kỳ (Ngân hàng, Flashcard) - nói đạt là tính thuộc
 function speakRow(i){
 if(!canRecog()){toast("⚠ Trình duyệt không hỗ trợ nhận dạng giọng nói.");return;}
-primeTTS(); // mở khóa kênh đọc (iPhone)
+unlockAudio(); // mở khóa audio + kênh đọc (iPhone)
 try{speechSynthesis.cancel();}catch(e){}
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 try{
@@ -725,6 +741,7 @@ c.split("\n").forEach(function(l){const m=l.trim().match(/^([ABC]):\s*(.+)$/);if
 return out;
 }
 function startDlg(role){
+unlockAudio();
 const sel=+LS.get("ta_dlgsel",0);
 const lines=parseDlg(sel);
 if(lines.length<2){toast("⚠ Tình huống này chưa có nội dung hội thoại.");return;}
@@ -773,7 +790,7 @@ function dlgListen(){
 const msg=document.getElementById("dlgmsg");
 if(!DLG)return;
 if(!canRecog()){if(msg)msg.innerHTML="⚠ Máy này không hỗ trợ nhận dạng giọng nói — bấm 🐢 nghe mẫu và luyện đọc theo.";return;}
-primeTTS(); // mở khóa kênh đọc cho các lượt máy nói sau (bắt buộc trên iPhone)
+unlockAudio(); // mở khóa audio + kênh đọc cho các lượt máy nói sau (bắt buộc trên iPhone)
 try{speechSynthesis.cancel();}catch(e){}
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const line=DLG.lines[DLG.pos];
