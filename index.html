@@ -656,10 +656,24 @@ function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g
 // ===== Luyện nói - máy chấm bằng nhận dạng giọng nói =====
 function canRecog(){return !!(window.SpeechRecognition||window.webkitSpeechRecognition);}
 function normTxt(t){return String(t).toLowerCase().replace(/[’‘`´]/g,"'").replace(/'/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();} // quy dấu nháy cong/thẳng về một, bỏ nháy để "I'm"="Im"
+// Tỉ lệ giống nhau theo ký tự (Levenshtein) 0..1 — dùng khi câu bị dính/tách từ khác nhau
+function simChars(a,b){
+if(!a.length&&!b.length)return 1;
+if(!a.length||!b.length)return 0;
+let prev=[],cur=[];for(let j=0;j<=b.length;j++)prev[j]=j;
+for(let i=1;i<=a.length;i++){cur[0]=i;
+for(let j=1;j<=b.length;j++){const c=a[i-1]===b[j-1]?0:1;cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+c);}
+prev=cur.slice();}
+return 1-prev[b.length]/Math.max(a.length,b.length);
+}
 function simScore(target,heard){
-const A=normTxt(target).split(" ").filter(Boolean),B=new Set(normTxt(heard).split(" "));
-if(!A.length)return 0;let hit=0;A.forEach(function(w){if(B.has(w))hit++;});
-return hit/A.length;
+const a=normTxt(target),b=normTxt(heard);
+const A=a.split(" ").filter(Boolean),B=new Set(b.split(" "));
+if(!A.length)return 0;
+let hit=0;A.forEach(function(w){if(B.has(w))hit++;});
+const wordScore=hit/A.length;                                     // đếm từ trùng (thứ tự bất kỳ)
+const ca=a.replace(/[^a-z0-9]/g,""),cb=b.replace(/[^a-z0-9]/g,""); // bỏ khoảng trắng+dấu: "goodnight"="good night", "cannot"="can not"
+return Math.max(wordScore,ca?simChars(ca,cb):0);
 }
 function speakTest(i){
 const box=document.getElementById("saybox");
