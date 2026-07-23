@@ -525,6 +525,10 @@ const h=md5(String(t).trim().toLowerCase()).substr(0,16);
 if(AUDIO_MAP&&AUDIO_MAP[h])return AUDIO_DIR+AUDIO_MAP[h];
 return AUDIO_DIR+h+".mp3";
 }
+// Tải trước file giọng của cả tình huống vào bộ nhớ đệm trình duyệt -> phát nối câu đỡ khựng
+function prefetchDlg(lines){
+try{(lines||[]).forEach(function(l){fetch(audioFile(l.e),{cache:"force-cache"}).catch(function(){});});}catch(e){}
+}
 // ===== MỘT phần tử âm thanh duy nhất, mở khóa 1 lần trong cú chạm =====
 // (bắt buộc với iPhone: phần tử Audio tạo mới sẽ bị iOS chặn khi phát ngoài cú chạm,
 //  nên các lượt máy nói sau khi nhận giọng bị rơi về giọng máy -> lúc file lúc giọng máy)
@@ -536,7 +540,7 @@ return _au;
 }
 function unlockAudio(){ // gọi từ MỌI nút bấm để mở khóa kênh audio + kênh đọc máy
 try{const a=getAu();
-if(!_auUnlocked){a.muted=true;const p=a.play();if(p&&p.then)p.then(function(){a.pause();a.currentTime=0;a.muted=false;_auUnlocked=true;}).catch(function(){a.muted=false;});else{a.muted=false;_auUnlocked=true;}}
+if(!_auUnlocked){a.muted=true;const p=a.play();if(p&&p.then)p.then(function(){if(a.muted){a.pause();a.currentTime=0;a.muted=false;}_auUnlocked=true;}).catch(function(){a.muted=false;});else{a.muted=false;_auUnlocked=true;}}
 }catch(e){}
 try{primeTTS();}catch(e){}
 }
@@ -760,7 +764,10 @@ const sel=+LS.get("ta_dlgsel",0);
 const lines=parseDlg(sel);
 if(lines.length<2){toast("⚠ Tình huống này chưa có nội dung hội thoại.");return;}
 DLG={lines:lines,role:role,pos:0,log:[]};
-dlgStep();
+prefetchDlg(lines); // nạp sẵn file giọng cả tình huống -> đỡ giật giữa các câu
+// Nếu máy mở lời (người học không phải vai nói trước): chờ ~300ms cho kênh tiếng ổn định
+// sau khi mở khóa audio, tránh câu đầu bị nhỏ/hụt tiếng (thường gặp khi chọn vai B).
+if(lines[0].r!==role)setTimeout(dlgStep,300);else dlgStep();
 }
 function dlgStep(){ // máy nói các lượt của máy, dừng ở lượt của người
 if(!DLG)return;
