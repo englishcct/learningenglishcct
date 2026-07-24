@@ -778,7 +778,7 @@ if(pid==="pg0")renderToday();else if(pid==="pg1")renderBank();
 }else{
 playBad();
 toast('<b style="color:#ffb3a7">❌ Chưa đạt ('+pct+'%)</b> — máy nghe: "'+esc(heard||"(không rõ)")+'"');
-speak("Could you say that again, please?");
+speak("Again, please."); // câu nhắc ngắn cho đỡ sốt ruột
 }
 };
 r.onerror=function(e){toast("⚠ "+(e.error==="not-allowed"?"Micro chưa được cấp quyền — bấm Cho phép khi trình duyệt hỏi.":"Không nghe được ("+e.error+"), thử lại."));};
@@ -866,13 +866,13 @@ setTimeout(dlgStep,700); // chờ iPhone nhả micro + trả âm thanh về loa 
 }else{
 playBad();
 if(msg)msg.innerHTML='❌ Máy nghe: "'+esc(heard||"(không rõ)")+'" — chưa khớp, máy sẽ đề nghị bạn nói lại.';
-setTimeout(function(){speak("Sorry, I did not catch that. Could you say that again, please?");},300);
+setTimeout(function(){speak("Again, please.");},300); // chờ iPhone nhả micro rồi mới nhắc
 }
 };
 r.onerror=function(e){
 try{r.abort();}catch(e2){}
 if(e.error==="not-allowed"||e.error==="service-not-allowed"){if(msg)msg.innerHTML="⚠ Micro bị chặn trên máy này — không luyện hội thoại trực tiếp được.";}
-else{if(msg)msg.innerHTML="⚠ Không nghe rõ — máy đề nghị bạn nói lại.";setTimeout(function(){speak("Could you say that again, please?");},300);}
+else{if(msg)msg.innerHTML="⚠ Không nghe rõ — máy đề nghị bạn nói lại.";setTimeout(function(){speak("Again, please.");},300);}
 };
 r.start();
 }catch(e){if(msg)msg.textContent="⚠ Không khởi động được micro.";}
