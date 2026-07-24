@@ -538,12 +538,20 @@ function getAu(){
 if(!_au){_au=new Audio();_au.preload="auto";_au.setAttribute("playsinline","");_au.volume=1;}
 return _au;
 }
-function unlockAudio(){ // gọi từ MỌI nút bấm để mở khóa kênh audio + kênh đọc máy
+// Đoạn lặng 0,05 giây: phát trong cú chạm để iPhone bật "kênh phát nhạc" (loa ngoài, âm lượng to)
+// trước khi phát file thật. Trước đây gọi play() khi CHƯA có src -> luôn lỗi, không mở khóa được gì.
+const SILENT_WAV="data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA";
+function unlockAudio(khongMoiTTS){ // gọi từ MỌI nút bấm để mở khóa kênh audio + kênh đọc máy
 try{const a=getAu();
-if(!_auUnlocked){a.muted=true;const p=a.play();if(p&&p.then)p.then(function(){if(a.muted){a.pause();a.currentTime=0;a.muted=false;}_auUnlocked=true;}).catch(function(){a.muted=false;});else{a.muted=false;_auUnlocked=true;}}
+if(!_auUnlocked){_auUnlocked=true;a.muted=false;a.volume=1;a.src=SILENT_WAV;try{a.load();}catch(e){}
+const p=a.play();if(p&&p.catch)p.catch(function(err){if(!err||err.name!=="AbortError")_auUnlocked=false;});} // AbortError = bị câu thật chen vào ngay sau đó, coi như đã mở khóa
 }catch(e){}
-try{primeTTS();}catch(e){}
+// Mồi kênh đọc máy làm iPhone "hạ nhỏ" mọi âm khác trong khoảng 1 giây -> nếu ngay sau đó
+// phát file giọng thì câu đầu nghe bé hẳn. Nơi nào sắp phát file ngay thì gọi unlockAudio(true).
+if(!khongMoiTTS){try{primeTTS();}catch(e){}}
 }
+// Câu này đã có sẵn file giọng neural chưa? (dùng để quyết định có cần mồi kênh đọc máy hay không)
+function coFileGiong(t){try{return !!(AUDIO_MAP&&AUDIO_MAP[md5(String(t).trim().toLowerCase()).substr(0,16)]);}catch(e){return false;}}
 function speak(t,slow,onEnd){
 try{
 const a=getAu();
@@ -636,7 +644,10 @@ if(!started&&retry>0){try{speechSynthesis.cancel();speechSynthesis.resume();}cat
 }
 // "Mồi" kênh đọc ngay trong cú chạm của người dùng (bắt buộc với iPhone:
 // nếu không, các lượt máy nói sau khi nhận giọng sẽ bị iOS chặn tiếng)
+let _ttsPrimed=false;
 function primeTTS(){
+if(_ttsPrimed)return; // chỉ cần mồi 1 lần cho cả phiên: mồi nhiều lần làm iPhone hạ nhỏ tiếng liên tục
+_ttsPrimed=true;
 try{const u=new SpeechSynthesisUtterance(" ");u.volume=0;u.rate=2;speechSynthesis.resume();speechSynthesis.speak(u);}catch(e){}
 }
 // ===== Âm thanh khích lệ (tạo bằng bộ tổng hợp âm, không cần file) =====
@@ -659,7 +670,30 @@ function playWin(){tone(523,0,0.14,"sine",.2);tone(659,0.13,0.14,"sine",.2);tone
 function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");}
 // ===== Luyện nói - máy chấm bằng nhận dạng giọng nói =====
 function canRecog(){return !!(window.SpeechRecognition||window.webkitSpeechRecognition);}
-function normTxt(t){return String(t).toLowerCase().replace(/[’‘`´]/g,"'").replace(/'/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();} // quy dấu nháy cong/thẳng về một, bỏ nháy để "I'm"="Im"
+// Số viết bằng chữ -> chữ số: máy nhận dạng luôn trả về "8:30" trong khi câu mẫu ghi "eight thirty"
+const NUMW={zero:0,oh:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+function normNum(s){
+const w=s.split(" ").filter(Boolean),out=[];
+for(let i=0;i<w.length;i++){
+if(NUMW[w[i]]===undefined){out.push(w[i]);continue;}
+let n=NUMW[w[i]];
+while(i+1<w.length){ // gộp "twenty five"=25, "two thousand twenty six"=2026; KHÔNG gộp "eight thirty" (giờ) -> "8 30"
+const nx=w[i+1];
+if(nx==="hundred"){n*=100;i++;}
+else if(nx==="thousand"){n*=1000;i++;}
+else if(NUMW[nx]!==undefined&&n>=20&&NUMW[nx]<n&&n%10===0){n+=NUMW[nx];i++;}
+else break;
+}
+out.push(String(n));
+}
+return out.join(" ");
+}
+function normTxt(t){ // quy dấu nháy cong/thẳng về một, bỏ nháy để "I'm"="Im"
+let s=String(t).toLowerCase().replace(/[’‘`´]/g,"'").replace(/'/g,"");
+s=s.replace(/(\d{1,2})\s*:\s*00\b/g," $1 oclock ").replace(/(\d{1,2})\s*:\s*(\d{2})\b/g," $1 $2 "); // 9:00 -> "9 oclock", 8:30 -> "8 30"
+s=s.replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
+return normNum(s);
+}
 // Tỉ lệ giống nhau theo ký tự (Levenshtein) 0..1 — dùng khi câu bị dính/tách từ khác nhau
 function simChars(a,b){
 if(!a.length&&!b.length)return 1;
@@ -752,22 +786,24 @@ r.start();
 }catch(e){toast("⚠ Không khởi động được micro.");}
 }
 // ===== Hội thoại trực tiếp với máy (tình huống tuần) =====
-let DLG=null;
+let DLG=null,_daNhacAmLuong=false;
 function parseDlg(i){
 const c=(DLGS[i]||{}).c||"";const out=[];
 c.split("\n").forEach(function(l){const m=l.trim().match(/^([ABC]):\s*(.+)$/);if(m)out.push({r:m[1],e:m[2].trim()});});
 return out;
 }
 function startDlg(role){
-unlockAudio();
 const sel=+LS.get("ta_dlgsel",0);
 const lines=parseDlg(sel);
-if(lines.length<2){toast("⚠ Tình huống này chưa có nội dung hội thoại.");return;}
+if(lines.length<2){unlockAudio();toast("⚠ Tình huống này chưa có nội dung hội thoại.");return;}
+// Câu máy nói đầu tiên (vai B: máy nói ngay câu A) - có sẵn file giọng thì KHÔNG mồi kênh đọc máy,
+// nếu không iPhone sẽ hạ nhỏ đúng câu mở đầu.
+const dau=lines.filter(function(l){return l.r!==role;})[0];
+unlockAudio(!!dau&&coFileGiong(dau.e));
 DLG={lines:lines,role:role,pos:0,log:[]};
 prefetchDlg(lines); // nạp sẵn file giọng cả tình huống -> đỡ giật giữa các câu
-// Nếu máy mở lời (người học không phải vai nói trước): chờ ~300ms cho kênh tiếng ổn định
-// sau khi mở khóa audio, tránh câu đầu bị nhỏ/hụt tiếng (thường gặp khi chọn vai B).
-if(lines[0].r!==role)setTimeout(dlgStep,300);else dlgStep();
+dlgStep(); // phát ngay trong cú chạm của người dùng: iPhone cho loa to nhất khi âm thanh khởi từ thao tác
+if(!_daNhacAmLuong){_daNhacAmLuong=true;toast("🔊 Điện thoại chỉnh âm lượng phát riêng — nếu nghe nhỏ, bấm phím tăng âm lượng NGAY LÚC máy đang nói.");}
 }
 function dlgStep(){ // máy nói các lượt của máy, dừng ở lượt của người
 if(!DLG)return;
@@ -819,22 +855,24 @@ try{
 const r=new SR();r.lang="en-US";r.interimResults=false;r.maxAlternatives=3;
 if(msg)msg.textContent="🎙 Đang nghe... hãy nói câu của bạn";
 r.onresult=function(ev){
+try{r.abort();}catch(e){} // nhả micro ngay: giúp iOS trả âm thanh về loa ngoài (đỡ nhỏ tiếng ở lượt máy nói sau)
 let best=0,heard="";
 for(let k=0;k<ev.results[0].length;k++){const t=ev.results[0][k].transcript;const s=simScore(line.e,t);if(s>=best){best=s;heard=t;}}
 if(best>=0.7){
 playGood();
 DLG.log.push({r:line.r,t:line.e,me:true,note:"bạn nói: "+heard+" ("+Math.round(best*100)+"%)"});
 DLG.pos++;
-setTimeout(dlgStep,450); // chờ micro nhả hẳn rồi máy mới nói lượt tiếp (fix mất tiếng)
+setTimeout(dlgStep,700); // chờ iPhone nhả micro + trả âm thanh về loa ngoài rồi máy mới nói (đỡ nhỏ tiếng)
 }else{
 playBad();
 if(msg)msg.innerHTML='❌ Máy nghe: "'+esc(heard||"(không rõ)")+'" — chưa khớp, máy sẽ đề nghị bạn nói lại.';
-speak("Sorry, I did not catch that. Could you say that again, please?");
+setTimeout(function(){speak("Sorry, I did not catch that. Could you say that again, please?");},300);
 }
 };
 r.onerror=function(e){
+try{r.abort();}catch(e2){}
 if(e.error==="not-allowed"||e.error==="service-not-allowed"){if(msg)msg.innerHTML="⚠ Micro bị chặn trên máy này — không luyện hội thoại trực tiếp được.";}
-else{if(msg)msg.innerHTML="⚠ Không nghe rõ — máy đề nghị bạn nói lại.";speak("Could you say that again, please?");}
+else{if(msg)msg.innerHTML="⚠ Không nghe rõ — máy đề nghị bạn nói lại.";setTimeout(function(){speak("Could you say that again, please?");},300);}
 };
 r.start();
 }catch(e){if(msg)msg.textContent="⚠ Không khởi động được micro.";}
