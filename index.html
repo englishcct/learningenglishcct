@@ -550,6 +550,22 @@ const p=a.play();if(p&&p.catch)p.catch(function(err){if(!err||err.name!=="AbortE
 // phát file giọng thì câu đầu nghe bé hẳn. Nơi nào sắp phát file ngay thì gọi unlockAudio(true).
 if(!khongMoiTTS){try{primeTTS();}catch(e){}}
 }
+// iPhone: hễ micro bật là iOS chuyển sang chế độ "vừa thu vừa phát" và đẩy tiếng ra LOA NGHE
+// ở đầu máy (nhỏ hơn loa ngoài nhiều lần). Muốn tiếng về lại loa ngoài phải:
+//   1) đợi micro tắt HẲN - căn bằng sự kiện onend của bộ nhận dạng, không đoán bằng đồng hồ;
+//   2) phát một đoạn lặng để bật lại kênh phát;
+// xong hai việc đó máy mới đọc thì tiếng mới to bình thường.
+function sauKhiNhaMic(r,fn){
+let daChay=false;
+const tiep=function(){
+if(daChay)return;daChay=true;
+try{const a=getAu();a.muted=false;a.volume=1;a.src=SILENT_WAV;const p=a.play();if(p&&p.catch)p.catch(function(){});}catch(e){}
+setTimeout(fn,350);
+};
+try{r.onend=tiep;}catch(e){}
+try{r.abort();}catch(e){}  // nhả micro ngay, không đợi hết thời gian nghe
+setTimeout(tiep,1600);     // phòng trường hợp máy không báo onend
+}
 // Câu này đã có sẵn file giọng neural chưa? (dùng để quyết định có cần mồi kênh đọc máy hay không)
 function coFileGiong(t){try{return !!(AUDIO_MAP&&AUDIO_MAP[md5(String(t).trim().toLowerCase()).substr(0,16)]);}catch(e){return false;}}
 function speak(t,slow,onEnd){
@@ -723,6 +739,7 @@ unlockAudio(); // mở khóa audio + kênh đọc (iPhone)
 const r=new SR();r.lang="en-US";r.interimResults=false;r.maxAlternatives=3;
 box.innerHTML='🎙 Đang nghe... hãy đọc to, rõ câu tiếng Anh';
 r.onresult=function(ev){
+try{r.abort();}catch(e){} // nhả micro ngay, kẻo iPhone giữ chế độ thu và bóp nhỏ tiếng các lượt sau
 let best=0,heard="";
 for(let k=0;k<ev.results[0].length;k++){
 const t=ev.results[0][k].transcript;const s=simScore(S[i].e,t);
@@ -770,6 +787,7 @@ let best=0,heard="";
 for(let k=0;k<ev.results[0].length;k++){const t=ev.results[0][k].transcript;const s=simScore(S[i].e,t);if(s>=best){best=s;heard=t;}}
 const pct=Math.round(best*100);
 if(best>=0.8){
+try{r.abort();}catch(e){} // nói đạt thì không đọc gì thêm, chỉ cần nhả micro
 playGood();
 if(!learned.has(i)){learned.add(i);saveLearned();scheduleSync();}
 toast('<b style="color:#7be495">✅ ĐẠT ('+pct+'%)</b> — máy nghe: "'+esc(heard)+'"');
@@ -778,7 +796,7 @@ if(pid==="pg0")renderToday();else if(pid==="pg1")renderBank();
 }else{
 playBad();
 toast('<b style="color:#ffb3a7">❌ Chưa đạt ('+pct+'%)</b> — máy nghe: "'+esc(heard||"(không rõ)")+'"');
-speak("Again, please."); // câu nhắc ngắn cho đỡ sốt ruột
+sauKhiNhaMic(r,function(){speak("Again, please.");}); // đợi micro tắt hẳn kẻo tiếng ra loa nghe (iPhone)
 }
 };
 r.onerror=function(e){toast("⚠ "+(e.error==="not-allowed"?"Micro chưa được cấp quyền — bấm Cho phép khi trình duyệt hỏi.":"Không nghe được ("+e.error+"), thử lại."));};
@@ -855,24 +873,22 @@ try{
 const r=new SR();r.lang="en-US";r.interimResults=false;r.maxAlternatives=3;
 if(msg)msg.textContent="🎙 Đang nghe... hãy nói câu của bạn";
 r.onresult=function(ev){
-try{r.abort();}catch(e){} // nhả micro ngay: giúp iOS trả âm thanh về loa ngoài (đỡ nhỏ tiếng ở lượt máy nói sau)
 let best=0,heard="";
 for(let k=0;k<ev.results[0].length;k++){const t=ev.results[0][k].transcript;const s=simScore(line.e,t);if(s>=best){best=s;heard=t;}}
 if(best>=0.7){
 playGood();
 DLG.log.push({r:line.r,t:line.e,me:true,note:"bạn nói: "+heard+" ("+Math.round(best*100)+"%)"});
 DLG.pos++;
-setTimeout(dlgStep,700); // chờ iPhone nhả micro + trả âm thanh về loa ngoài rồi máy mới nói (đỡ nhỏ tiếng)
+sauKhiNhaMic(r,dlgStep); // đợi micro tắt hẳn + bật lại loa ngoài rồi máy mới nói
 }else{
 playBad();
 if(msg)msg.innerHTML='❌ Máy nghe: "'+esc(heard||"(không rõ)")+'" — chưa khớp, máy sẽ đề nghị bạn nói lại.';
-setTimeout(function(){speak("Again, please.");},300); // chờ iPhone nhả micro rồi mới nhắc
+sauKhiNhaMic(r,function(){speak("Again, please.");});
 }
 };
 r.onerror=function(e){
-try{r.abort();}catch(e2){}
-if(e.error==="not-allowed"||e.error==="service-not-allowed"){if(msg)msg.innerHTML="⚠ Micro bị chặn trên máy này — không luyện hội thoại trực tiếp được.";}
-else{if(msg)msg.innerHTML="⚠ Không nghe rõ — máy đề nghị bạn nói lại.";setTimeout(function(){speak("Again, please.");},300);}
+if(e.error==="not-allowed"||e.error==="service-not-allowed"){try{r.abort();}catch(e2){}if(msg)msg.innerHTML="⚠ Micro bị chặn trên máy này — không luyện hội thoại trực tiếp được.";}
+else{if(msg)msg.innerHTML="⚠ Không nghe rõ — máy đề nghị bạn nói lại.";sauKhiNhaMic(r,function(){speak("Again, please.");});}
 };
 r.start();
 }catch(e){if(msg)msg.textContent="⚠ Không khởi động được micro.";}
