@@ -729,6 +729,42 @@ const wordScore=hit/A.length;                                     // đếm từ
 const ca=a.replace(/[^a-z0-9]/g,""),cb=b.replace(/[^a-z0-9]/g,""); // bỏ khoảng trắng+dấu: "goodnight"="good night", "cannot"="can not"
 return Math.max(wordScore,ca?simChars(ca,cb):0);
 }
+// ===== Canh giờ cho micro =====
+// Bộ nhận dạng hay "treo": người học chưa nói, nói quá nhỏ, hoặc nói mà máy không ra chữ nào
+// -> onresult không bao giờ chạy, màn hình đứng mãi ở "Đang nghe...". Nên mỗi lần bật micro đều
+// đặt đồng hồ đếm ngược; hết giờ thì nhả micro và mời người học nói lại.
+const NGHE_TOI_DA=10; // giây chờ khi chưa nghe thấy tiếng nói nào (đủ thoáng cho người nhìn câu, lấy hơi rồi mới đọc)
+const NGHE_THEM=10;   // đã nghe thấy tiếng người thì chờ thêm bấy nhiêu giây, không cắt ngang câu đang nói
+function canhNghe(r,hienDem,khiNgung){
+r._xong=false;r._coTieng=false;let con=NGHE_TOI_DA;
+const dung=function(){
+if(r._xong)return;r._xong=true;
+clearInterval(r._dh);
+try{r.onend=null;r.onspeechstart=null;}catch(e){}
+try{r.abort();}catch(e){}   // nhả micro ngay
+khiNgung(r._coTieng?"khongro":"imlang");
+};
+if(hienDem)hienDem(con,false);
+r._dh=setInterval(function(){
+if(r._xong){clearInterval(r._dh);return;}
+con--;
+if(con<=0){dung();return;}
+if(hienDem)hienDem(con,r._coTieng);
+},1000);
+// máy nghe thấy tiếng người: gia hạn để nó kịp trả kết quả
+try{r.onspeechstart=function(){r._coTieng=true;if(con<NGHE_THEM)con=NGHE_THEM;};}catch(e){}
+// máy tự tắt micro mà không trả chữ nào: cũng phải ngưng và mời nói lại
+try{r.onend=function(){dung();};}catch(e){}
+}
+function xongNghe(r){ // gọi ở đầu onresult/onerror — tắt đồng hồ canh; trả false nếu đã ngưng rồi
+if(!r||r._xong)return false;
+r._xong=true;clearInterval(r._dh);
+try{r.onend=null;r.onspeechstart=null;}catch(e){}
+return true;
+}
+function loiNghe(vi){ // lời nhắc theo lý do không nghe được
+return vi==="khongro"?"⏱ Máy chưa nhận ra chữ nào — hãy nói chậm và rõ hơn":"⏱ Chưa nghe thấy bạn nói — hãy đưa micro gần miệng, nói to, tránh nơi ồn";
+}
 function speakTest(i){
 const box=document.getElementById("saybox");
 if(!box)return;
@@ -737,8 +773,12 @@ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 try{
 unlockAudio(); // mở khóa audio + kênh đọc (iPhone)
 const r=new SR();r.lang="en-US";r.interimResults=false;r.maxAlternatives=3;
-box.innerHTML='🎙 Đang nghe... hãy đọc to, rõ câu tiếng Anh';
+canhNghe(r,function(con,coTieng){
+const b=document.getElementById("saybox");
+if(b)b.innerHTML='🎙 '+(coTieng?'Đang nghe bạn nói':'Đang nghe... hãy đọc to, rõ câu tiếng Anh')+' <b>('+con+'s)</b>';
+},function(vi){nhacNoiLai(i,vi);});
 r.onresult=function(ev){
+if(!xongNghe(r))return; // đã hết giờ và mời nói lại rồi thì bỏ qua kết quả về muộn
 try{r.abort();}catch(e){} // nhả micro ngay, kẻo iPhone giữ chế độ thu và bóp nhỏ tiếng các lượt sau
 let best=0,heard="";
 for(let k=0;k<ev.results[0].length;k++){
@@ -758,14 +798,22 @@ box.innerHTML='<b style="color:#c0392b">❌ Chưa đạt ('+pct+'%)</b> — máy
 }
 };
 r.onerror=function(e){
+if(!xongNghe(r))return;
 if(e.error==="not-allowed"||e.error==="service-not-allowed"){
 box.innerHTML='⚠ <b>Micro chưa được cấp quyền.</b> Cách mở: khi trình duyệt hỏi thì bấm Cho phép; nếu lỡ chặn — Android: biểu tượng 🔒 cạnh địa chỉ → Quyền → Micrô → Cho phép; iPhone: Cài đặt → Safari (hoặc Cài đặt → Ứng dụng → Safari) → Micrô → Cho phép, rồi tải lại trang. Chỉ có nói đạt mới được tính thuộc.';
-}else{
-box.innerHTML='⚠ Không nghe được ('+e.error+') — thử lại ở nơi yên tĩnh, nói to rõ hơn.';
-}
+}else if(e.error==="aborted"){/* mình chủ động tắt micro, không báo gì */}
+else if(e.error==="no-speech"||e.error==="audio-capture"){nhacNoiLai(i,"imlang");}
+else{nhacNoiLai(i,"loi:"+e.error);}
 };
 r.start();
 }catch(e){box.innerHTML='⚠ Không khởi động được micro trên thiết bị này.';}
+}
+// Hết giờ / không nghe được ở phần "Nói thử - máy chấm": ngưng lại và mời nói lại
+function nhacNoiLai(i,vi){
+const b=document.getElementById("saybox");if(!b)return;
+const ly=vi&&vi.indexOf("loi:")===0?("⚠ Không nghe được ("+esc(vi.slice(4))+") — thử lại ở nơi yên tĩnh"):loiNghe(vi);
+b.innerHTML='<b style="color:#c0392b">'+ly+'.</b> Bấm nút bên dưới để nói lại.'
++'<div class="btnrow1" style="margin-top:6px"><button class="btn btn-gold" onclick="speakTest('+i+')">🎤 Nói lại</button><button class="btn btn-o" onclick="speak(S['+i+'].e)">🔊 Nghe mẫu</button></div>';
 }
 // Thông báo nổi (dùng cho luyện nói ở Ngân hàng / Flashcard)
 function toast(msg){
@@ -781,8 +829,11 @@ try{speechSynthesis.cancel();}catch(e){}
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 try{
 const r=new SR();r.lang="en-US";r.interimResults=false;r.maxAlternatives=3;
-toast('🎙 Đang nghe... hãy đọc to: "'+esc(S[i].e)+'"');
+canhNghe(r,function(con,coTieng){
+toast('🎙 '+(coTieng?'Đang nghe bạn nói':'Đang nghe... hãy đọc to')+' ('+con+'s): "'+esc(S[i].e)+'"');
+},function(vi){toast(loiNghe(vi)+'. Bấm 🎤 Nói để thử lại.');});
 r.onresult=function(ev){
+if(!xongNghe(r))return; // hết giờ rồi thì bỏ qua kết quả về muộn
 let best=0,heard="";
 for(let k=0;k<ev.results[0].length;k++){const t=ev.results[0][k].transcript;const s=simScore(S[i].e,t);if(s>=best){best=s;heard=t;}}
 const pct=Math.round(best*100);
@@ -799,7 +850,13 @@ toast('<b style="color:#ffb3a7">❌ Chưa đạt ('+pct+'%)</b> — máy nghe: "
 sauKhiNhaMic(r,function(){speak("Again, please.");}); // đợi micro tắt hẳn kẻo tiếng ra loa nghe (iPhone)
 }
 };
-r.onerror=function(e){toast("⚠ "+(e.error==="not-allowed"?"Micro chưa được cấp quyền — bấm Cho phép khi trình duyệt hỏi.":"Không nghe được ("+e.error+"), thử lại."));};
+r.onerror=function(e){
+if(!xongNghe(r))return;
+if(e.error==="aborted")return;
+if(e.error==="not-allowed"||e.error==="service-not-allowed"){toast("⚠ Micro chưa được cấp quyền — bấm Cho phép khi trình duyệt hỏi.");}
+else if(e.error==="no-speech"||e.error==="audio-capture"){toast(loiNghe("imlang")+". Bấm 🎤 Nói để thử lại.");}
+else{toast("⚠ Không nghe được ("+e.error+") — bấm 🎤 Nói để thử lại.");}
+};
 r.start();
 }catch(e){toast("⚠ Không khởi động được micro.");}
 }
@@ -871,8 +928,11 @@ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const line=DLG.lines[DLG.pos];
 try{
 const r=new SR();r.lang="en-US";r.interimResults=false;r.maxAlternatives=3;
-if(msg)msg.textContent="🎙 Đang nghe... hãy nói câu của bạn";
+canhNghe(r,function(con,coTieng){
+if(msg)msg.textContent="🎙 "+(coTieng?"Đang nghe bạn nói":"Đang nghe... hãy nói câu của bạn")+" ("+con+"s)";
+},function(vi){if(msg)msg.innerHTML=loiNghe(vi)+'. Bấm <b>🎤 Nói câu của bạn</b> để nói lại.';});
 r.onresult=function(ev){
+if(!xongNghe(r))return; // hết giờ rồi thì bỏ qua kết quả về muộn
 let best=0,heard="";
 for(let k=0;k<ev.results[0].length;k++){const t=ev.results[0][k].transcript;const s=simScore(line.e,t);if(s>=best){best=s;heard=t;}}
 if(best>=0.7){
@@ -887,7 +947,10 @@ sauKhiNhaMic(r,function(){speak("Again, please.");});
 }
 };
 r.onerror=function(e){
+if(!xongNghe(r))return;
+if(e.error==="aborted")return;
 if(e.error==="not-allowed"||e.error==="service-not-allowed"){try{r.abort();}catch(e2){}if(msg)msg.innerHTML="⚠ Micro bị chặn trên máy này — không luyện hội thoại trực tiếp được.";}
+else if(e.error==="no-speech"||e.error==="audio-capture"){try{r.abort();}catch(e2){}if(msg)msg.innerHTML=loiNghe("imlang")+'. Bấm <b>🎤 Nói câu của bạn</b> để nói lại.';}
 else{if(msg)msg.innerHTML="⚠ Không nghe rõ — máy đề nghị bạn nói lại.";sauKhiNhaMic(r,function(){speak("Again, please.");});}
 };
 r.start();
