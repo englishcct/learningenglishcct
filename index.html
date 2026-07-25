@@ -1041,8 +1041,12 @@ if(last3.length){h+='<div class="stat"><span>Kiểm tra gần nhất</span><b>'+
 h+='</div>'
 +'<div class="card"><h2>🔈 Giọng đọc tiếng Anh</h2><div class="note">Phần mềm ưu tiên phát giọng thu sẵn; nếu câu chưa có file thì dùng giọng của máy — có thể chọn giọng khác bên dưới.</div>'
 +'<select id="voicesel" style="width:100%;padding:10px;border:1px solid #d5ddd0;border-radius:10px;font-size:16px;margin:6px 0" onchange="LS.set(\'ta_voice\',this.value)">'+voiceOpts()+'</select>'
-+'<div class="btnrow1"><button class="btn btn-g" onclick="speak(\'Good morning! Nice to meet you.\')">🔊 Nghe thử giọng này</button></div></div>'
-+'<div class="card"><h2>📄 Báo cáo kết quả (gửi chỉ huy)</h2><div class="btnrow1" style="margin-top:4px"><button class="btn btn-g" onclick="makeReport()">📝 Tạo báo cáo</button><button class="btn btn-o" onclick="copyReport()">📋 Sao chép</button></div><textarea id="rep" placeholder="Bấm \'Tạo báo cáo\' để tự động tổng hợp kết quả."></textarea></div>';
++'<div class="btnrow1"><button class="btn btn-g" onclick="speak(\'Good morning! Nice to meet you.\')">🔊 Nghe thử giọng này</button></div></div>';
+// Trợ lý & nhân viên không cần tự làm báo cáo: kết quả đã tự đồng bộ, chỉ huy xem ở tab Quản lý.
+// Chỉ huy vẫn giữ phần này để lấy kết quả cá nhân báo cáo lên cấp trên.
+if(normRole(prof.role)==="chihuy"){
+h+='<div class="card"><h2>📄 Báo cáo kết quả cá nhân (gửi cấp trên)</h2><div class="note">Kết quả của cán bộ thuộc quyền xem ở tab 👥 Quản lý (có nút sao chép báo cáo tổng hợp).</div><div class="btnrow1" style="margin-top:4px"><button class="btn btn-g" onclick="makeReport()">📝 Tạo báo cáo</button><button class="btn btn-o" onclick="copyReport()">📋 Sao chép</button></div><textarea id="rep" placeholder="Bấm \'Tạo báo cáo\' để tự động tổng hợp kết quả."></textarea></div>';
+}
 document.getElementById("pg3").innerHTML=h;
 }
 function voiceOpts(){
