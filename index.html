@@ -789,9 +789,8 @@ const pct=Math.round(best*100);
 if(best>=0.8){
 playGood();
 if(!learned.has(i)){learned.add(i);saveLearned();scheduleSync();}
-renderToday();
-const b2=document.getElementById("saybox");
-if(b2)b2.innerHTML='<b style="color:#1d7a3e">✅ ĐẠT ('+pct+'%)</b> — máy nghe: "'+esc(heard)+'". Đã tự đánh dấu thuộc!';
+capNhatThuoc(i); // chỉ đánh dấu ✓ tại chỗ, giữ nguyên vị trí đang xem
+box.innerHTML='<b style="color:#1d7a3e">✅ ĐẠT ('+pct+'%)</b> — máy nghe: "'+esc(heard)+'". Đã tự đánh dấu thuộc!';
 }else{
 playBad();
 box.innerHTML='<b style="color:#c0392b">❌ Chưa đạt ('+pct+'%)</b> — máy nghe: "'+esc(heard||"(không rõ)")+'". Bấm 🔊 nghe mẫu rồi thử lại.';
@@ -842,8 +841,7 @@ try{r.abort();}catch(e){} // nói đạt thì không đọc gì thêm, chỉ c�
 playGood();
 if(!learned.has(i)){learned.add(i);saveLearned();scheduleSync();}
 toast('<b style="color:#7be495">✅ ĐẠT ('+pct+'%)</b> — máy nghe: "'+esc(heard)+'"');
-const pid=(document.querySelector(".page.show")||{}).id;
-if(pid==="pg0")renderToday();else if(pid==="pg1")renderBank();
+capNhatThuoc(i); // chỉ đánh dấu ✓ tại dòng đó, không vẽ lại trang (giữ nguyên chỗ đang kéo tới)
 }else{
 playBad();
 toast('<b style="color:#ffb3a7">❌ Chưa đạt ('+pct+'%)</b> — máy nghe: "'+esc(heard||"(không rõ)")+'"');
@@ -864,7 +862,17 @@ r.start();
 let DLG=null,_daNhacAmLuong=false;
 function parseDlg(i){
 const c=(DLGS[i]||{}).c||"";const out=[];
-c.split("\n").forEach(function(l){const m=l.trim().match(/^([ABC]):\s*(.+)$/);if(m)out.push({r:m[1],e:m[2].trim()});});
+c.split("\n").forEach(function(l){
+const t=l.trim();
+const m=t.match(/^([ABC]):\s*(.+)$/);
+if(m){out.push({r:m[1],e:m[2].trim(),v:""});return;}
+// Trang HoiThoai ghi nghĩa tiếng Việt thành dòng "(...)" ngay dưới lượt lời -> gắn vào lượt lời đó
+if(out.length&&t.charAt(0)==="("){
+const nghia=t.replace(/^\(\s*/,"").replace(/\s*\)$/,"");
+const l2=out[out.length-1];
+if(nghia)l2.v=l2.v?l2.v+" "+nghia:nghia;
+}
+});
 return out;
 }
 function startDlg(role){
@@ -884,7 +892,7 @@ function dlgStep(){ // máy nói các lượt của máy, dừng ở lượt c�
 if(!DLG)return;
 const buf=[];
 while(DLG.pos<DLG.lines.length&&DLG.lines[DLG.pos].r!==DLG.role){
-const l=DLG.lines[DLG.pos];DLG.log.push({r:l.r,t:l.e,me:false});buf.push(l.e);DLG.pos++;
+const l=DLG.lines[DLG.pos];DLG.log.push({r:l.r,t:l.e,v:l.v,me:false});buf.push(l.e);DLG.pos++;
 }
 if(buf.length)speakSeq(buf); // đọc lần lượt từng câu để dùng đúng file giọng neural của câu đó
 renderDlg();
@@ -904,7 +912,9 @@ function renderDlg(){
 const b=document.getElementById("dlgbox");if(!b||!DLG)return;
 let h='<div class="note">Bạn là vai <b>'+DLG.role+'</b> — máy đóng vai còn lại.</div>';
 DLG.log.forEach(function(m){
-h+='<div style="margin:6px 0;padding:8px 10px;border-radius:10px;max-width:88%;font-size:14px;'+(m.me?'background:#fff3d6;margin-left:auto;text-align:right':'background:#e8efe6')+'"><b>'+m.r+':</b> '+esc(m.t)+(m.note?'<div style="font-size:11px;color:var(--muted)">'+esc(m.note)+'</div>':'')+'</div>';
+h+='<div style="margin:6px 0;padding:8px 10px;border-radius:10px;max-width:88%;font-size:14px;'+(m.me?'background:#fff3d6;margin-left:auto;text-align:right':'background:#e8efe6')+'"><b>'+m.r+':</b> '+esc(m.t)
++(m.v?'<div style="font-size:11.5px;color:var(--muted);margin-top:2px">📖 '+esc(m.v)+'</div>':'')
++(m.note?'<div style="font-size:11px;color:var(--muted)">'+esc(m.note)+'</div>':'')+'</div>';
 });
 h+='<div id="dlgctl" style="margin-top:8px"></div>';
 b.innerHTML=h;
@@ -915,6 +925,7 @@ playWin();setTimeout(function(){speak("Well done!");},700);return;
 }
 const line=DLG.lines[DLG.pos];
 c.innerHTML='<div class="ex" style="margin-top:0">👉 Đến lượt bạn ('+line.r+'): <b>'+esc(line.e)+'</b></div>'
++(line.v?'<div class="note" style="margin-top:4px">📖 '+esc(line.v)+'</div>':'')
 +'<div class="btnrow1"><button class="btn btn-gold" onclick="dlgListen()">🎤 Nói câu của bạn</button><button class="btn btn-o" onclick="speak(DLG.lines[DLG.pos].e,true)">🐢 Nghe mẫu</button></div>'
 +'<div class="note" id="dlgmsg" style="min-height:15px"></div>';
 }
@@ -937,7 +948,7 @@ let best=0,heard="";
 for(let k=0;k<ev.results[0].length;k++){const t=ev.results[0][k].transcript;const s=simScore(line.e,t);if(s>=best){best=s;heard=t;}}
 if(best>=0.7){
 playGood();
-DLG.log.push({r:line.r,t:line.e,me:true,note:"bạn nói: "+heard+" ("+Math.round(best*100)+"%)"});
+DLG.log.push({r:line.r,t:line.e,v:line.v,me:true,note:"bạn nói: "+heard+" ("+Math.round(best*100)+"%)"});
 DLG.pos++;
 sauKhiNhaMic(r,dlgStep); // đợi micro tắt hẳn + bật lại loa ngoài rồi máy mới nói
 }else{
@@ -959,6 +970,7 @@ r.start();
 function go(i){document.querySelectorAll(".page").forEach((p,j)=>p.classList.toggle("show",i===j));document.querySelectorAll(".tabs button").forEach((b,j)=>b.classList.toggle("active",i===j));window.scrollTo(0,0);if(i===0)renderToday();if(i===1)renderBank();if(i===2)renderPractice();if(i===3)renderProgress();if(i===4)renderAdmin();}
 function toggleLearned(i){if(learned.has(i))learned.delete(i);else learned.add(i);saveLearned();scheduleSync();const p=document.querySelector(".page.show").id;if(p==="pg0")renderToday();if(p==="pg1")renderBank();if(p==="pg3")renderProgress();}
 // ---------- Tab Hôm nay ----------
+let HN_CUR=-1; // chỉ số câu đang hiện ở thẻ "HÔM NAY"
 function renderToday(){
 let h="";
 if(!S.length||!S[0].d){
@@ -976,12 +988,13 @@ for(let i=S.length-1;i>=0;i--){if(S[i].d&&S[i].d<=tk){cur=i;break;}}
 if(cur<0)cur=0;
 }
 const s=S[cur];
+HN_CUR=cur; // nhớ câu đang hiện ở thẻ đầu trang để cập nhật dấu ✓ tại chỗ
 if(chuaToi){h+='<div class="countdown">⏳ Nội dung bắt đầu từ ngày <b>'+dLabel(S[0].d)+'</b>. Dưới đây là câu đầu tiên để làm quen trước.</div>';}
 else if(nghi){h+='<div class="countdown">📖 Hôm nay chưa có câu mới. Ôn lại câu gần nhất và các câu trong tuần bên dưới.</div>';}
 h+='<div class="card"><span class="daytag">'+(chuaToi||nghi?"CÂU GẦN NHẤT":"HÔM NAY "+dLabel(tk))+'</span><span class="wktag">'+esc(W.label||"")+'</span>'
 +'<div class="en">'+esc(s.e)+'</div>'+(s.p?'<div class="ipa">'+esc(s.p)+'</div>':'')
 +'<div class="vi">📖 '+esc(s.v)+'</div>'
-+(learned.has(cur)?'<div class="note" style="color:#1d7a3e;font-weight:700;margin-top:8px">✓ Câu này đã được máy xác nhận thuộc</div>':'')
++'<div id="hnthuoc">'+(learned.has(cur)?'<div class="note" style="color:#1d7a3e;font-weight:700;margin-top:8px">✓ Câu này đã được máy xác nhận thuộc</div>':'')+'</div>'
 +'<div class="btnrow1"><button class="btn btn-g" onclick="speak(S['+cur+'].e)">🔊 Nghe</button>'
 +'<button class="btn btn-o" onclick="speak(S['+cur+'].e,true)">🐢 Nghe chậm</button>'
 +'<button class="btn btn-gold" onclick="speakTest('+cur+')">🎤 Nói thử — máy chấm</button></div>'
@@ -1000,7 +1013,17 @@ if(!dem)h+='<div class="note">Chưa có câu nào của tuần này được m�
 h+='</div>';
 document.getElementById("pg0").innerHTML=h;
 }
-function rowHTML(i){const s=S[i];return '<div class="srow"><span class="num" style="font-size:9.5px;min-width:36px;border-radius:9px">'+esc(dLabel(s.d).slice(0,5))+'</span><div class="txt"><div class="e">'+esc(s.e)+'</div><div class="m">'+(s.p?esc(s.p)+' - ':'')+esc(s.v)+'</div></div><div class="acts"><button class="mini" onclick="speak(S['+i+'].e)">🔊</button><button class="mini" onclick="speakRow('+i+')">🎤</button><span class="mini '+(learned.has(i)?"on":"")+'" style="cursor:default;display:flex;align-items:center;justify-content:center">'+(learned.has(i)?"✓":"")+'</span></div></div>';}
+function rowHTML(i){const s=S[i];return '<div class="srow" data-i="'+i+'"><span class="num" style="font-size:9.5px;min-width:36px;border-radius:9px">'+esc(dLabel(s.d).slice(0,5))+'</span><div class="txt"><div class="e">'+esc(s.e)+'</div><div class="m">'+(s.p?esc(s.p)+' - ':'')+esc(s.v)+'</div></div><div class="acts"><button class="mini" onclick="speak(S['+i+'].e)">🔊</button><button class="mini" onclick="speakRow('+i+')">🎤</button><span class="mini tick'+(learned.has(i)?" on":"")+'" style="cursor:default;display:flex;align-items:center;justify-content:center">'+(learned.has(i)?"✓":"")+'</span></div></div>';}
+// Học thuộc xong thì chỉ thay dấu ✓ ngay tại dòng đó, KHÔNG vẽ lại cả trang — vẽ lại làm màn hình
+// nhảy về đầu, người đang luyện nói giữa danh sách các câu trong tuần phải kéo xuống tìm lại chỗ cũ.
+function capNhatThuoc(i){
+const on=learned.has(i);
+document.querySelectorAll('.srow[data-i="'+i+'"] .tick').forEach(function(el){
+el.className="mini tick"+(on?" on":"");el.textContent=on?"✓":"";
+});
+const hn=document.getElementById("hnthuoc"); // thẻ câu hôm nay ở đầu trang
+if(hn&&HN_CUR===i)hn.innerHTML=on?'<div class="note" style="color:#1d7a3e;font-weight:700;margin-top:8px">✓ Câu này đã được máy xác nhận thuộc</div>':"";
+}
 // ---------- Tab Ngân hàng ----------
 let openWk=new Set([0]);
 function renderBank(){
