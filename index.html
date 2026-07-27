@@ -336,11 +336,12 @@ const c=(DLGS[i]||{}).c||"";
 const t=c.split("\n").map(function(l){return l.trim();}).filter(function(l){return /^[ABC]:/.test(l);}).map(function(l){return l.replace(/^[ABC]:\s*/,"");}).join(" ... ");
 if(t)speak(t);
 }
-async function fetchBank(force){
+async function fetchBank(){
+// Mỗi lần mở app đều hỏi lại máy chủ. Không làm app chậm đi: màn hình vẫn vẽ ngay
+// từ bản lưu trong máy, có nội dung mới thì applyBank()+renderToday() bên dưới tự vẽ lại.
+// (Trước đây chỉ hỏi 3 tiếng/lần -> sửa câu hoặc link video trên Sheet xong,
+//  người học phải chờ tới 3 tiếng mới thấy, mà không có cách nào ép tải lại.)
 if(!apiReady())return;
-const cache=LS.get("ta_bank",null);
-if(!cache||!cache.length||!cache[0].d)force=true; // chưa có dữ liệu theo ngày -> tải ngay
-if(!force&&Date.now()-LS.get("ta_bank_t",0)<3*3600*1000)return; // kiểm tra 3 giờ/lần
 try{
 const r=await fetch(API_URL+"?u="+encodeURIComponent(UNIT_CODE)+"&action=bank");
 const j=await r.json();
@@ -383,7 +384,7 @@ localStorage.removeItem("ta_dirty");
 location.reload();
 }
 async function renderAdmin(){
-fetchBank(true); // kiểm tra ngân hàng câu ngay (tạo NganHangMacDinh nếu chưa có)
+fetchBank(); // kiểm tra ngân hàng câu ngay (tạo NganHangMacDinh nếu chưa có)
 const b=document.getElementById("pg4");
 if(!apiReady()){b.innerHTML='<div class="card"><h2>👥 Quản lý</h2><div class="note">Chưa cấu hình link máy chủ (API_URL trong file). Xem file "Huong dan thiet lap".</div></div>';return;}
 b.innerHTML='<div class="card"><h2>👥 Theo dõi toàn cơ quan</h2><div class="note">⏳ Đang tải dữ liệu...</div></div>';
